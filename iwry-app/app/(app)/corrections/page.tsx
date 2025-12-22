@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { sql } from "@vercel/postgres";
 import { formatDate } from "@/lib/utils";
+import { CheckCircle, AlertCircle, BookOpen, Target } from "lucide-react";
+import StatCard from "@/components/StatCard";
 
 export default async function CorrectionsPage() {
   const session = await auth();
@@ -48,14 +50,14 @@ export default async function CorrectionsPage() {
   };
 
   const categoryColors: Record<string, string> = {
-    verb_conjugation: "bg-blue-100 text-blue-800 border-blue-200",
-    gender_agreement: "bg-pink-100 text-pink-800 border-pink-200",
-    prepositions: "bg-purple-100 text-purple-800 border-purple-200",
-    subjunctive_mood: "bg-orange-100 text-orange-800 border-orange-200",
-    word_choice: "bg-green-100 text-green-800 border-green-200",
-    pronunciation: "bg-yellow-100 text-yellow-800 border-yellow-200",
-    formal_informal: "bg-indigo-100 text-indigo-800 border-indigo-200",
-    other: "bg-gray-100 text-gray-800 border-gray-200",
+    verb_conjugation: "bg-[#00d9ff]/10 text-[#00d9ff] border-[#00d9ff]/30",
+    gender_agreement: "bg-[#ec4899]/10 text-[#ec4899] border-[#ec4899]/30",
+    prepositions: "bg-[#a855f7]/10 text-[#a855f7] border-[#a855f7]/30",
+    subjunctive_mood: "bg-[#f97316]/10 text-[#f97316] border-[#f97316]/30",
+    word_choice: "bg-[#10b981]/10 text-[#10b981] border-[#10b981]/30",
+    pronunciation: "bg-[#fbbf24]/10 text-[#fbbf24] border-[#fbbf24]/30",
+    formal_informal: "bg-[#6366f1]/10 text-[#6366f1] border-[#6366f1]/30",
+    other: "bg-[#64748b]/10 text-[#64748b] border-[#64748b]/30",
   };
 
   return (
@@ -70,31 +72,35 @@ export default async function CorrectionsPage() {
 
       {/* Stats */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-white p-4">
-          <p className="text-sm font-medium text-muted-foreground">Total Corrections</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">{corrections.length}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-white p-4">
-          <p className="text-sm font-medium text-muted-foreground">Categories</p>
-          <p className="mt-1 text-2xl font-bold text-foreground">
-            {Object.keys(categories).length}
-          </p>
-        </div>
-        <div className="rounded-xl border border-border bg-white p-4">
-          <p className="text-sm font-medium text-muted-foreground">Most Common</p>
-          <p className="mt-1 text-sm font-bold text-foreground">
-            {Object.keys(categories).length > 0
+        <StatCard
+          label="Total Corrections"
+          value={corrections.length}
+          icon={AlertCircle}
+          color="bg-[#f97316]/10 text-[#f97316] border-[#f97316]/30"
+        />
+        <StatCard
+          label="Categories"
+          value={Object.keys(categories).length}
+          icon={Target}
+          color="bg-[#a855f7]/10 text-[#a855f7] border-[#a855f7]/30"
+        />
+        <StatCard
+          label="Most Common"
+          value={
+            Object.keys(categories).length > 0
               ? categoryLabels[Object.keys(categories).sort((a, b) => categories[b].length - categories[a].length)[0]]
-              : "N/A"}
-          </p>
-        </div>
+              : "N/A"
+          }
+          icon={BookOpen}
+          color="bg-[#00d9ff]/10 text-[#00d9ff] border-[#00d9ff]/30"
+        />
       </div>
 
       {/* Corrections List */}
       {corrections.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-white p-12 text-center">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-green-100 flex items-center justify-center text-3xl">
-            ✅
+        <div className="rounded-2xl border border-border bg-[#1e2433] p-12 text-center">
+          <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-[#10b981]/10 border border-[#10b981]/30 flex items-center justify-center glow-green">
+            <CheckCircle className="h-8 w-8 text-[#10b981]" />
           </div>
           <h3 className="text-lg font-semibold text-foreground">No corrections yet!</h3>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -120,42 +126,44 @@ export default async function CorrectionsPage() {
                 {items.map((correction) => (
                   <div
                     key={correction.id}
-                    className="rounded-xl border border-border bg-white p-4 hover:shadow-sm transition-shadow"
+                    className="rounded-xl border border-border bg-[#1e2433] p-4 hover:border-border-glow transition-all duration-300"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         {/* Mistake vs Correction */}
                         <div className="mb-3">
                           <div className="flex items-start gap-2 mb-2">
-                            <span className="text-xs font-medium text-red-600 mt-1">❌</span>
-                            <p className="text-sm text-red-600 line-through">
+                            <span className="text-xs font-medium text-[#ef4444] mt-1">✗</span>
+                            <p className="text-sm text-[#ef4444] line-through">
                               {correction.mistake}
                             </p>
                           </div>
                           <div className="flex items-start gap-2">
-                            <span className="text-xs font-medium text-green-600 mt-1">✅</span>
-                            <p className="text-sm font-medium text-green-600">
+                            <span className="text-xs font-medium text-[#10b981] mt-1">✓</span>
+                            <p className="text-sm font-medium text-[#10b981]">
                               {correction.correction}
                             </p>
                           </div>
                         </div>
 
                         {/* Explanation */}
-                        <div className="rounded-lg bg-blue-50 border border-blue-100 p-3">
-                          <p className="text-xs font-medium text-blue-900 mb-1">📚 Explanation</p>
-                          <p className="text-sm text-blue-800">{correction.explanation}</p>
+                        <div className="rounded-lg bg-[#00d9ff]/10 border border-[#00d9ff]/30 p-3">
+                          <p className="text-xs font-medium text-[#00d9ff] mb-1 flex items-center gap-1">
+                            <BookOpen className="h-3 w-3" /> Explanation
+                          </p>
+                          <p className="text-sm text-foreground">{correction.explanation}</p>
                         </div>
                       </div>
 
                       {/* Metadata */}
                       <div className="flex flex-col items-end gap-2 text-xs text-muted-foreground">
-                        <span className="capitalize">{correction.difficulty_level}</span>
+                        <span className="capitalize px-2 py-1 rounded bg-[#1e2433] border border-border">{correction.difficulty_level}</span>
                         <span>{formatDate(correction.created_at)}</span>
                         <div className="flex gap-0.5">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <span
                               key={star}
-                              className={star <= correction.confidence_score ? "text-yellow-500" : "text-gray-300"}
+                              className={star <= correction.confidence_score ? "text-[#fbbf24]" : "text-[#64748b]"}
                             >
                               ★
                             </span>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ChatInterface from "@/components/ChatInterface";
 import { DifficultyLevel, PortugueseAccent } from "@/types";
+import { Sparkles, Trophy, Lightbulb } from "lucide-react";
 
 export default function PracticePage() {
   const router = useRouter();
@@ -82,10 +83,10 @@ export default function PracticePage() {
   if (showSummary) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8">
-        <div className="rounded-2xl border border-border bg-white p-8 shadow-lg">
+        <div className="rounded-2xl border border-border bg-[#1e2433] p-8">
           <div className="text-center mb-6">
-            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-green-100 flex items-center justify-center text-4xl">
-              ✅
+            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-[#10b981]/10 border border-[#10b981]/30 flex items-center justify-center glow-green">
+              <Trophy className="h-8 w-8 text-[#10b981]" />
             </div>
             <h2 className="text-2xl font-bold text-foreground">Great job!</h2>
             <p className="mt-2 text-muted-foreground">
@@ -94,16 +95,16 @@ export default function PracticePage() {
           </div>
 
           {summary && (
-            <div className="mb-6 rounded-lg bg-green-50 border border-green-200 p-4">
-              <h3 className="font-semibold text-green-900 mb-2">Session Summary</h3>
-              <p className="text-sm text-green-800 whitespace-pre-wrap">{summary}</p>
+            <div className="mb-6 rounded-lg bg-[#10b981]/10 border border-[#10b981]/30 p-4">
+              <h3 className="font-semibold text-[#10b981] mb-2">Session Summary</h3>
+              <p className="text-sm text-foreground whitespace-pre-wrap">{summary}</p>
             </div>
           )}
 
           <div className="space-y-3">
             <button
               onClick={finishSession}
-              className="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground hover:bg-[#00852f] transition-colors"
+              className="w-full rounded-lg bg-gradient-to-r from-[#00d9ff] to-[#00b8d9] px-4 py-3 font-semibold text-[#0f1419] shadow-lg shadow-[#00d9ff]/30 hover:shadow-xl hover:shadow-[#00d9ff]/40 transition-all duration-300"
             >
               Back to Dashboard
             </button>
@@ -114,7 +115,7 @@ export default function PracticePage() {
                 setConversationId(null);
                 startConversation();
               }}
-              className="w-full rounded-lg border-2 border-border bg-white px-4 py-3 font-semibold text-foreground hover:border-primary transition-colors"
+              className="w-full rounded-lg border border-border bg-[#1e2433] px-4 py-3 font-semibold text-foreground hover:border-[#00d9ff]/50 hover:bg-[#00d9ff]/10 transition-all duration-300"
             >
               Start Another Session
             </button>
@@ -128,7 +129,7 @@ export default function PracticePage() {
   if (!isStarted) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-8">
-        <div className="rounded-2xl border border-border bg-white p-8 shadow-lg">
+        <div className="rounded-2xl border border-border bg-[#1e2433] p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground">Start Practicing</h1>
             <p className="mt-2 text-muted-foreground">
@@ -147,10 +148,10 @@ export default function PracticePage() {
                   <button
                     key={level}
                     onClick={() => setDifficulty(level)}
-                    className={`rounded-lg border-2 px-4 py-3 text-center font-medium capitalize transition-all ${
+                    className={`rounded-lg border-2 px-4 py-3 text-center font-medium capitalize transition-all duration-300 ${
                       difficulty === level
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-white text-foreground hover:border-primary/50"
+                        ? "border-[#00d9ff] bg-[#00d9ff]/10 text-[#00d9ff] glow-cyan-sm"
+                        : "border-border bg-[#0f1419] text-foreground hover:border-[#00d9ff]/50"
                     }`}
                   >
                     {level}
@@ -179,10 +180,10 @@ export default function PracticePage() {
                   <button
                     key={option.value}
                     onClick={() => setAccent(option.value)}
-                    className={`rounded-lg border-2 px-4 py-3 text-center font-medium transition-all ${
+                    className={`rounded-lg border-2 px-4 py-3 text-center font-medium transition-all duration-300 ${
                       accent === option.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-white text-foreground hover:border-primary/50"
+                        ? "border-[#a855f7] bg-[#a855f7]/10 text-[#a855f7] glow-purple-sm"
+                        : "border-border bg-[#0f1419] text-foreground hover:border-[#a855f7]/50"
                     }`}
                   >
                     {option.label}
@@ -200,16 +201,20 @@ export default function PracticePage() {
             {/* Start Button */}
             <button
               onClick={startConversation}
-              className="w-full rounded-lg bg-primary px-4 py-4 text-lg font-semibold text-primary-foreground hover:bg-[#00852f] transition-colors shadow-lg hover:shadow-xl"
+              className="w-full rounded-lg bg-gradient-to-r from-[#00d9ff] to-[#00b8d9] px-4 py-4 text-lg font-semibold text-[#0f1419] shadow-lg shadow-[#00d9ff]/30 hover:shadow-xl hover:shadow-[#00d9ff]/40 transition-all duration-300 flex items-center justify-center gap-2"
             >
-              Start Conversation 💬
+              <Sparkles className="h-5 w-5" />
+              Begin Lesson
             </button>
           </div>
 
           {/* Tips */}
-          <div className="mt-8 rounded-lg bg-blue-50 border border-blue-200 p-4">
-            <h3 className="font-semibold text-blue-900 mb-2">💡 Quick Tips</h3>
-            <ul className="text-sm text-blue-800 space-y-1">
+          <div className="mt-8 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/30 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Lightbulb className="h-4 w-4 text-[#a855f7]" />
+              <h3 className="font-semibold text-[#a855f7]">Quick Tips</h3>
+            </div>
+            <ul className="text-sm text-foreground space-y-1">
               <li>• Tap any Portuguese word for instant translation</li>
               <li>• Mistakes are automatically tracked for review</li>
               <li>• Be natural - make mistakes and learn from them!</li>
@@ -224,7 +229,7 @@ export default function PracticePage() {
   return (
     <div className="h-[calc(100vh-8rem)] md:h-[calc(100vh-4rem)]">
       <div className="mx-auto h-full max-w-4xl">
-        <div className="h-full rounded-t-2xl md:rounded-2xl overflow-hidden border border-border bg-white shadow-lg">
+        <div className="h-full rounded-t-2xl md:rounded-2xl overflow-hidden border border-border bg-[#0f1419]">
           {conversationId && (
             <ChatInterface
               conversationId={conversationId}
