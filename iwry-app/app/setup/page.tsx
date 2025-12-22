@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function SetupPage() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -25,6 +26,7 @@ export default function SetupPage() {
         setMessage(data.details || data.error || "Failed to initialize database");
       }
     } catch (error) {
+      console.error("Database initialization request failed:", error);
       setStatus("error");
       setMessage("Network error. Please try again.");
     }
@@ -46,12 +48,12 @@ export default function SetupPage() {
         {status === "success" && (
           <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200">
             <p className="text-green-700 text-sm">{message}</p>
-            <a
+            <Link
               href="/register"
               className="mt-3 inline-block text-green-700 font-medium hover:underline"
             >
               Go to Registration →
-            </a>
+            </Link>
           </div>
         )}
 
