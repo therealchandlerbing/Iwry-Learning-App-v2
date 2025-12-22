@@ -235,7 +235,7 @@ English:`;
 // Generate conversation summary
 export async function generateConversationSummary(
   messages: Array<{ role: string; content: string }>,
-  corrections: Correction[]
+  corrections: Array<{ mistake: string; correction: string; explanation: string }>
 ): Promise<string> {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.0-flash-exp"
