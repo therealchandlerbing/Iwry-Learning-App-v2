@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
     let summary = "";
     try {
       summary = await generateConversationSummary(
-        messagesResult.rows,
-        correctionsResult.rows
+        messagesResult.rows as Array<{ role: string; content: string }>,
+        correctionsResult.rows as Array<{ mistake: string; correction: string; explanation: string }>
       );
     } catch (error) {
       console.error("Failed to generate summary:", error);
