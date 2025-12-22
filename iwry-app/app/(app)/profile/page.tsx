@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import { DifficultyLevel, PortugueseAccent } from "@/types";
+import { User, Settings, Info, LogOut, CheckCircle } from "lucide-react";
 
 export default function ProfilePage() {
   const { data: session } = useSession();
@@ -58,30 +59,78 @@ export default function ProfilePage() {
     <div className="mx-auto max-w-2xl px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Profile & Settings</h1>
+        <h1 className="text-3xl font-bold text-foreground">My Profile</h1>
         <p className="mt-2 text-muted-foreground">
           Manage your account and learning preferences
         </p>
       </div>
 
-      {/* Account Info */}
-      <div className="mb-6 rounded-2xl border border-border bg-white p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Account Information</h2>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium text-muted-foreground">Name</label>
-            <p className="text-sm text-foreground">{session?.user?.name || "Not set"}</p>
+      {/* Profile Card with Avatar */}
+      <div className="mb-6 rounded-2xl border border-border bg-[#1e2433] p-6">
+        <div className="flex items-center gap-4 mb-6">
+          {/* Avatar */}
+          <div className="relative">
+            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-[#a855f7] to-[#d946ef] flex items-center justify-center text-white text-2xl font-bold glow-purple">
+              {session?.user?.name?.charAt(0)?.toUpperCase() || "U"}
+            </div>
+            {/* Level Badge */}
+            <div className="absolute -bottom-1 -right-1 px-2 py-1 rounded-full bg-[#10b981] text-[#0f1419] text-xs font-bold glow-green-sm">
+              Lvl 1
+            </div>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Email</label>
-            <p className="text-sm text-foreground">{session?.user?.email || "Not set"}</p>
+            <h2 className="text-xl font-bold text-foreground">{session?.user?.name || "User"}</h2>
+            <p className="text-sm text-muted-foreground">{session?.user?.email || "Not set"}</p>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="px-2 py-1 rounded-full bg-[#00d9ff]/10 border border-[#00d9ff]/30 text-[#00d9ff] text-xs font-medium">
+                Beginner
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Ring Visual */}
+        <div className="flex items-center justify-center py-4">
+          <div className="relative">
+            <svg className="w-32 h-32 transform -rotate-90">
+              <circle
+                className="text-[#2d3548]"
+                strokeWidth="8"
+                stroke="currentColor"
+                fill="transparent"
+                r="56"
+                cx="64"
+                cy="64"
+              />
+              <circle
+                className="text-[#10b981]"
+                strokeWidth="8"
+                strokeLinecap="round"
+                stroke="currentColor"
+                fill="transparent"
+                r="56"
+                cx="64"
+                cy="64"
+                strokeDasharray="352"
+                strokeDashoffset="282"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-xs text-muted-foreground">Fluency Level</span>
+              <span className="text-xl font-bold text-[#10b981]">20%</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Learning Preferences */}
-      <div className="mb-6 rounded-2xl border border-border bg-white p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Learning Preferences</h2>
+      <div className="mb-6 rounded-2xl border border-border bg-[#1e2433] p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="h-8 w-8 rounded-lg bg-[#00d9ff]/10 border border-[#00d9ff]/30 flex items-center justify-center text-[#00d9ff]">
+            <Settings className="h-4 w-4" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground">Learning Preferences</h2>
+        </div>
 
         <div className="space-y-6">
           {/* Difficulty */}
@@ -94,10 +143,10 @@ export default function ProfilePage() {
                 <button
                   key={level}
                   onClick={() => setDifficulty(level)}
-                  className={`rounded-lg border-2 px-4 py-3 text-center text-sm font-medium capitalize transition-all ${
+                  className={`rounded-lg border-2 px-4 py-3 text-center text-sm font-medium capitalize transition-all duration-300 ${
                     difficulty === level
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-white text-foreground hover:border-primary/50"
+                      ? "border-[#00d9ff] bg-[#00d9ff]/10 text-[#00d9ff] glow-cyan-sm"
+                      : "border-border bg-[#0f1419] text-foreground hover:border-[#00d9ff]/50"
                   }`}
                 >
                   {level}
@@ -113,7 +162,7 @@ export default function ProfilePage() {
             </label>
             <div className="grid grid-cols-2 gap-3">
               {([
-                { value: "sao-paulo", label: "São Paulo" },
+                { value: "sao-paulo", label: "Sao Paulo" },
                 { value: "rio", label: "Rio de Janeiro" },
                 { value: "northeast", label: "Northeast" },
                 { value: "portugal", label: "European" },
@@ -121,10 +170,10 @@ export default function ProfilePage() {
                 <button
                   key={option.value}
                   onClick={() => setAccent(option.value)}
-                  className={`rounded-lg border-2 px-4 py-3 text-center text-sm font-medium transition-all ${
+                  className={`rounded-lg border-2 px-4 py-3 text-center text-sm font-medium transition-all duration-300 ${
                     accent === option.value
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-white text-foreground hover:border-primary/50"
+                      ? "border-[#a855f7] bg-[#a855f7]/10 text-[#a855f7] glow-purple-sm"
+                      : "border-border bg-[#0f1419] text-foreground hover:border-[#a855f7]/50"
                   }`}
                 >
                   {option.label}
@@ -137,16 +186,33 @@ export default function ProfilePage() {
           <button
             onClick={saveSettings}
             disabled={saving}
-            className="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-primary-foreground hover:bg-[#00852f] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className={`w-full rounded-lg px-4 py-3 font-semibold transition-all duration-300 ${
+              saved
+                ? "bg-[#10b981] text-white glow-green"
+                : "bg-gradient-to-r from-[#00d9ff] to-[#00b8d9] text-[#0f1419] shadow-lg shadow-[#00d9ff]/30 hover:shadow-xl hover:shadow-[#00d9ff]/40"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            {saving ? "Saving..." : saved ? "✓ Saved!" : "Save Preferences"}
+            {saving ? (
+              "Saving..."
+            ) : saved ? (
+              <span className="flex items-center justify-center gap-2">
+                <CheckCircle className="h-4 w-4" /> Saved!
+              </span>
+            ) : (
+              "Save Preferences"
+            )}
           </button>
         </div>
       </div>
 
       {/* About */}
-      <div className="mb-6 rounded-2xl border border-border bg-white p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-3">About Iwry</h2>
+      <div className="mb-6 rounded-2xl border border-border bg-[#1e2433] p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="h-8 w-8 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/30 flex items-center justify-center text-[#a855f7]">
+            <Info className="h-4 w-4" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground">About Iwry</h2>
+        </div>
         <p className="text-sm text-muted-foreground mb-3">
           Iwry helps you learn Brazilian Portuguese through natural AI conversations.
           Practice at your own pace, track your mistakes, and build vocabulary.
@@ -157,8 +223,9 @@ export default function ProfilePage() {
       {/* Sign Out */}
       <button
         onClick={() => signOut({ callbackUrl: "/" })}
-        className="w-full rounded-lg border-2 border-red-200 bg-white px-4 py-3 font-semibold text-red-600 hover:bg-red-50 transition-colors"
+        className="w-full rounded-lg border border-[#ef4444]/30 bg-[#ef4444]/10 px-4 py-3 font-semibold text-[#ef4444] hover:bg-[#ef4444]/20 hover:border-[#ef4444]/50 transition-all duration-300 flex items-center justify-center gap-2"
       >
+        <LogOut className="h-4 w-4" />
         Sign Out
       </button>
     </div>
