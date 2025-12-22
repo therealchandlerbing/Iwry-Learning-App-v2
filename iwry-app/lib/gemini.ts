@@ -200,14 +200,23 @@ export async function sendMessage(
     if ('functionCall' in part && part.functionCall) {
       const functionCall = part.functionCall;
       if (functionCall.name === 'recordCorrection') {
-        const args = functionCall.args as Record<string, unknown>;
-        corrections.push({
-          mistake: args?.mistake as string,
-          correction: args?.correction as string,
-          explanation: args?.explanation as string,
-          grammarCategory: args?.category as string,
-          confidenceScore: args?.severity as number
-        });
+        const args = functionCall.args as Record<string, unknown> | undefined;
+        if (
+          args &&
+          typeof args.mistake === 'string' &&
+          typeof args.correction === 'string' &&
+          typeof args.explanation === 'string' &&
+          typeof args.category === 'string' &&
+          typeof args.severity === 'number'
+        ) {
+          corrections.push({
+            mistake: args.mistake,
+            correction: args.correction,
+            explanation: args.explanation,
+            grammarCategory: args.category,
+            confidenceScore: args.severity,
+          } as Correction);
+        }
       }
     }
   }
