@@ -20,7 +20,10 @@ export async function GET(
 
   // Validate size
   if (isNaN(sizeNum) || sizeNum < 16 || sizeNum > 1024) {
-    return new Response("Invalid size", { status: 400 });
+    return new Response(JSON.stringify({ error: "Invalid size" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   // Generate the icon using ImageResponse
@@ -79,6 +82,9 @@ export async function GET(
     {
       width: sizeNum,
       height: sizeNum,
+      headers: {
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
     }
   );
 }
