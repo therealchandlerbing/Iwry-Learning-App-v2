@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { sql } from "@vercel/postgres";
 import { formatDate } from "@/lib/utils";
 import { CheckCircle, AlertCircle, BookOpen, Target } from "lucide-react";
+import StatCard from "@/components/StatCard";
 
 export default async function CorrectionsPage() {
   const session = await auth();
@@ -71,45 +72,28 @@ export default async function CorrectionsPage() {
 
       {/* Stats */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-[#1e2433] p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Corrections</p>
-              <p className="mt-1 text-2xl font-bold text-foreground">{corrections.length}</p>
-            </div>
-            <div className="h-10 w-10 rounded-lg bg-[#f97316]/10 border border-[#f97316]/30 flex items-center justify-center text-[#f97316]">
-              <AlertCircle className="h-5 w-5" />
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-border bg-[#1e2433] p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Categories</p>
-              <p className="mt-1 text-2xl font-bold text-foreground">
-                {Object.keys(categories).length}
-              </p>
-            </div>
-            <div className="h-10 w-10 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/30 flex items-center justify-center text-[#a855f7]">
-              <Target className="h-5 w-5" />
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-border bg-[#1e2433] p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Most Common</p>
-              <p className="mt-1 text-sm font-bold text-foreground">
-                {Object.keys(categories).length > 0
-                  ? categoryLabels[Object.keys(categories).sort((a, b) => categories[b].length - categories[a].length)[0]]
-                  : "N/A"}
-              </p>
-            </div>
-            <div className="h-10 w-10 rounded-lg bg-[#00d9ff]/10 border border-[#00d9ff]/30 flex items-center justify-center text-[#00d9ff]">
-              <BookOpen className="h-5 w-5" />
-            </div>
-          </div>
-        </div>
+        <StatCard
+          label="Total Corrections"
+          value={corrections.length}
+          icon={AlertCircle}
+          color="bg-[#f97316]/10 text-[#f97316] border-[#f97316]/30"
+        />
+        <StatCard
+          label="Categories"
+          value={Object.keys(categories).length}
+          icon={Target}
+          color="bg-[#a855f7]/10 text-[#a855f7] border-[#a855f7]/30"
+        />
+        <StatCard
+          label="Most Common"
+          value={
+            Object.keys(categories).length > 0
+              ? categoryLabels[Object.keys(categories).sort((a, b) => categories[b].length - categories[a].length)[0]]
+              : "N/A"
+          }
+          icon={BookOpen}
+          color="bg-[#00d9ff]/10 text-[#00d9ff] border-[#00d9ff]/30"
+        />
       </div>
 
       {/* Corrections List */}

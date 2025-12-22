@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
-import { DifficultyLevel, PortugueseAccent } from "@/types";
+import { DifficultyLevel, PortugueseAccent, ProgressStats } from "@/types";
 import { Settings, Info, LogOut, CheckCircle } from "lucide-react";
+import ProgressRing from "@/components/ProgressRing";
+import { calculateFluencyPercentage } from "@/lib/constants";
 
 export default function ProfilePage() {
   const { data: session } = useSession();
@@ -12,10 +14,24 @@ export default function ProfilePage() {
   const [accent, setAccent] = useState<PortugueseAccent>("sao-paulo");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [stats, setStats] = useState<ProgressStats | null>(null);
 
   useEffect(() => {
     loadSettings();
+    loadStats();
   }, []);
+
+  const loadStats = async () => {
+    try {
+      const response = await fetch("/api/user/stats");
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error("Failed to load stats:", error);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -91,35 +107,12 @@ export default function ProfilePage() {
 
         {/* Progress Ring Visual */}
         <div className="flex items-center justify-center py-4">
-          <div className="relative">
-            <svg className="w-32 h-32 transform -rotate-90" role="img" aria-label="Fluency progress: 20%">
-              <circle
-                className="text-[#2d3548]"
-                strokeWidth="8"
-                stroke="currentColor"
-                fill="transparent"
-                r="56"
-                cx="64"
-                cy="64"
-              />
-              <circle
-                className="text-[#10b981]"
-                strokeWidth="8"
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="transparent"
-                r="56"
-                cx="64"
-                cy="64"
-                strokeDasharray="352"
-                strokeDashoffset="282"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-xs text-muted-foreground">Fluency Level</span>
-              <span className="text-xl font-bold text-[#10b981]">20%</span>
-            </div>
-          </div>
+          <ProgressRing
+            percentage={stats ? calculateFluencyPercentage(stats) : 0}
+            size={128}
+            strokeWidth={8}
+            label="Fluency Level"
+          />
         </div>
       </div>
 

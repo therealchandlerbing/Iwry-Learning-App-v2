@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { getUserProgressStats } from "@/lib/db";
+import { ACHIEVEMENT_THRESHOLDS } from "@/lib/constants";
 import Link from "next/link";
 import { MessageCircle, BookOpen, AlertCircle, Flame, Trophy, Target, Sparkles } from "lucide-react";
 
@@ -167,22 +168,24 @@ export default async function DashboardPage() {
             <h3 className="font-semibold text-foreground">Recent Badges</h3>
           </div>
           <div className="flex gap-3">
-            {stats.totalConversations >= 1 && (
+            {stats.totalConversations >= ACHIEVEMENT_THRESHOLDS.FIRST_LESSON && (
               <div className="h-12 w-12 rounded-full bg-[#00d9ff]/10 border border-[#00d9ff]/30 flex items-center justify-center glow-cyan-sm" title="First Lesson">
                 <MessageCircle className="h-5 w-5 text-[#00d9ff]" />
               </div>
             )}
-            {stats.totalVocabulary >= 10 && (
+            {stats.totalVocabulary >= ACHIEVEMENT_THRESHOLDS.VOCABULARY_MASTER && (
               <div className="h-12 w-12 rounded-full bg-[#a855f7]/10 border border-[#a855f7]/30 flex items-center justify-center glow-purple-sm" title="Vocabulary Master">
                 <BookOpen className="h-5 w-5 text-[#a855f7]" />
               </div>
             )}
-            {stats.currentStreak >= 3 && (
+            {stats.currentStreak >= ACHIEVEMENT_THRESHOLDS.STREAK_BADGE && (
               <div className="h-12 w-12 rounded-full bg-[#f97316]/10 border border-[#f97316]/30 flex items-center justify-center glow-orange" title="3 Day Streak">
                 <Flame className="h-5 w-5 text-[#f97316]" />
               </div>
             )}
-            {stats.totalConversations === 0 && stats.totalVocabulary < 10 && stats.currentStreak < 3 && (
+            {stats.totalConversations < ACHIEVEMENT_THRESHOLDS.FIRST_LESSON &&
+             stats.totalVocabulary < ACHIEVEMENT_THRESHOLDS.VOCABULARY_MASTER &&
+             stats.currentStreak < ACHIEVEMENT_THRESHOLDS.STREAK_BADGE && (
               <p className="text-sm text-muted-foreground">Start practicing to earn badges!</p>
             )}
           </div>
