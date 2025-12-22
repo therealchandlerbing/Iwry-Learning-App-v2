@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType, FunctionDeclaration } from "@google/generative-ai";
 import { DifficultyLevel, PortugueseAccent, Correction } from "@/types";
 
 const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -119,27 +119,28 @@ ${accentInfo}
 }
 
 // Function declaration for error detection
-const correctionFunctionDeclaration = {
+const correctionFunctionDeclaration: FunctionDeclaration = {
   name: "recordCorrection",
   description: "Record a grammatical or vocabulary mistake made by the user for later review",
   parameters: {
-    type: "OBJECT" as const,
+    type: SchemaType.OBJECT,
     properties: {
       mistake: {
-        type: "STRING" as const,
+        type: SchemaType.STRING,
         description: "The exact incorrect phrase or sentence the user said"
       },
       correction: {
-        type: "STRING" as const,
+        type: SchemaType.STRING,
         description: "The correct version of what they should have said"
       },
       explanation: {
-        type: "STRING" as const,
+        type: SchemaType.STRING,
         description: "Clear explanation in English of why the correction is needed and the grammar rule"
       },
       category: {
-        type: "STRING" as const,
+        type: SchemaType.STRING,
         description: "Grammar category",
+        format: "enum",
         enum: [
           "verb_conjugation",
           "gender_agreement",
@@ -152,7 +153,7 @@ const correctionFunctionDeclaration = {
         ]
       },
       severity: {
-        type: "NUMBER" as const,
+        type: SchemaType.NUMBER,
         description: "How important is this mistake? 1=minor, 3=moderate, 5=critical"
       }
     },
@@ -199,12 +200,13 @@ export async function sendMessage(
     if ('functionCall' in part && part.functionCall) {
       const functionCall = part.functionCall;
       if (functionCall.name === 'recordCorrection') {
+        const args = functionCall.args as Record<string, unknown>;
         corrections.push({
-          mistake: functionCall.args?.mistake as string,
-          correction: functionCall.args?.correction as string,
-          explanation: functionCall.args?.explanation as string,
-          grammarCategory: functionCall.args?.category as string,
-          confidenceScore: functionCall.args?.severity as number
+          mistake: args?.mistake as string,
+          correction: args?.correction as string,
+          explanation: args?.explanation as string,
+          grammarCategory: args?.category as string,
+          confidenceScore: args?.severity as number
         });
       }
     }
