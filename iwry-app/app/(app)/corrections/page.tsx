@@ -1,0 +1,175 @@
+import { auth } from "@/lib/auth";
+import { sql } from "@vercel/postgres";
+import { formatDate } from "@/lib/utils";
+
+export default async function CorrectionsPage() {
+  const session = await auth();
+  const userId = session!.user.id;
+
+  // Get all corrections for user
+  const result = await sql`
+    SELECT
+      c.id,
+      c.mistake,
+      c.correction,
+      c.explanation,
+      c.grammar_category,
+      c.confidence_score,
+      c.created_at,
+      conv.difficulty_level
+    FROM corrections c
+    JOIN conversations conv ON c.conversation_id = conv.id
+    WHERE c.user_id = ${userId}
+    ORDER BY c.created_at DESC
+    LIMIT 100
+  `;
+
+  const corrections = result.rows;
+
+  // Group by category
+  const categories: Record<string, any[]> = {};
+  corrections.forEach((correction) => {
+    const category = correction.grammar_category || "other";
+    if (!categories[category]) {
+      categories[category] = [];
+    }
+    categories[category].push(correction);
+  });
+
+  const categoryLabels: Record<string, string> = {
+    verb_conjugation: "Verb Conjugation",
+    gender_agreement: "Gender Agreement",
+    prepositions: "Prepositions",
+    subjunctive_mood: "Subjunctive Mood",
+    word_choice: "Word Choice",
+    pronunciation: "Pronunciation",
+    formal_informal: "Formal/Informal",
+    other: "Other",
+  };
+
+  const categoryColors: Record<string, string> = {
+    verb_conjugation: "bg-blue-100 text-blue-800 border-blue-200",
+    gender_agreement: "bg-pink-100 text-pink-800 border-pink-200",
+    prepositions: "bg-purple-100 text-purple-800 border-purple-200",
+    subjunctive_mood: "bg-orange-100 text-orange-800 border-orange-200",
+    word_choice: "bg-green-100 text-green-800 border-green-200",
+    pronunciation: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    formal_informal: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    other: "bg-gray-100 text-gray-800 border-gray-200",
+  };
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground">Corrections</h1>
+        <p className="mt-2 text-muted-foreground">
+          Review your mistakes and learn from them
+        </p>
+      </div>
+
+      {/* Stats */}
+      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <div className="rounded-xl border border-border bg-white p-4">
+          <p className="text-sm font-medium text-muted-foreground">Total Corrections</p>
+          <p className="mt-1 text-2xl font-bold text-foreground">{corrections.length}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-white p-4">
+          <p className="text-sm font-medium text-muted-foreground">Categories</p>
+          <p className="mt-1 text-2xl font-bold text-foreground">
+            {Object.keys(categories).length}
+          </p>
+        </div>
+        <div className="rounded-xl border border-border bg-white p-4">
+          <p className="text-sm font-medium text-muted-foreground">Most Common</p>
+          <p className="mt-1 text-sm font-bold text-foreground">
+            {Object.keys(categories).length > 0
+              ? categoryLabels[Object.keys(categories).sort((a, b) => categories[b].length - categories[a].length)[0]]
+              : "N/A"}
+          </p>
+        </div>
+      </div>
+
+      {/* Corrections List */}
+      {corrections.length === 0 ? (
+        <div className="rounded-2xl border border-border bg-white p-12 text-center">
+          <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-green-100 flex items-center justify-center text-3xl">
+            ✅
+          </div>
+          <h3 className="text-lg font-semibold text-foreground">No corrections yet!</h3>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Start practicing to get personalized feedback on your Portuguese
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {Object.entries(categories).map(([category, items]) => (
+            <div key={category}>
+              <div className="mb-3 flex items-center gap-2">
+                <span
+                  className={`rounded-full border px-3 py-1 text-xs font-medium ${categoryColors[category] || categoryColors.other}`}
+                >
+                  {categoryLabels[category] || category}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {items.length} correction{items.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {items.map((correction) => (
+                  <div
+                    key={correction.id}
+                    className="rounded-xl border border-border bg-white p-4 hover:shadow-sm transition-shadow"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        {/* Mistake vs Correction */}
+                        <div className="mb-3">
+                          <div className="flex items-start gap-2 mb-2">
+                            <span className="text-xs font-medium text-red-600 mt-1">❌</span>
+                            <p className="text-sm text-red-600 line-through">
+                              {correction.mistake}
+                            </p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-xs font-medium text-green-600 mt-1">✅</span>
+                            <p className="text-sm font-medium text-green-600">
+                              {correction.correction}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Explanation */}
+                        <div className="rounded-lg bg-blue-50 border border-blue-100 p-3">
+                          <p className="text-xs font-medium text-blue-900 mb-1">📚 Explanation</p>
+                          <p className="text-sm text-blue-800">{correction.explanation}</p>
+                        </div>
+                      </div>
+
+                      {/* Metadata */}
+                      <div className="flex flex-col items-end gap-2 text-xs text-muted-foreground">
+                        <span className="capitalize">{correction.difficulty_level}</span>
+                        <span>{formatDate(correction.created_at)}</span>
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <span
+                              key={star}
+                              className={star <= correction.confidence_score ? "text-yellow-500" : "text-gray-300"}
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
