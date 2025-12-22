@@ -9,8 +9,8 @@ export default function Navigation({ userName }: { userName?: string | null }) {
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/dashboard", label: "Feed", icon: Home },
-    { href: "/practice", label: "Learn", icon: MessageCircle },
+    { href: "/dashboard", label: "Dashboard", icon: Home },
+    { href: "/practice", label: "Practice", icon: MessageCircle },
     { href: "/corrections", label: "Corrections", icon: AlertCircle },
     { href: "/profile", label: "Profile", icon: User },
   ];

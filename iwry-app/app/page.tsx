@@ -108,7 +108,7 @@ export default function Home() {
             </div>
             <h3 className="text-lg font-semibold text-foreground">Choose Your Accent</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Practice with Sao Paulo, Rio, Northeast, or European Portuguese accents. Learn the
+              Practice with São Paulo, Rio, Northeast, or European Portuguese accents. Learn the
               dialect that matches your goals.
             </p>
           </div>
@@ -177,7 +177,7 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
           <div className="text-center text-sm text-muted-foreground">
             <p>© 2024 Iwry. Built for Portuguese learners.</p>
-            <p className="mt-2 italic text-[#00d9ff]">Vamos aprender portugues juntos!</p>
+            <p className="mt-2 italic text-[#00d9ff]">Vamos aprender português juntos!</p>
           </div>
         </div>
       </footer>

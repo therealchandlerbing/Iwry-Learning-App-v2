@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import { DifficultyLevel, PortugueseAccent } from "@/types";
-import { User, Settings, Info, LogOut, CheckCircle } from "lucide-react";
+import { Settings, Info, LogOut, CheckCircle } from "lucide-react";
 
 export default function ProfilePage() {
   const { data: session } = useSession();
@@ -92,7 +92,7 @@ export default function ProfilePage() {
         {/* Progress Ring Visual */}
         <div className="flex items-center justify-center py-4">
           <div className="relative">
-            <svg className="w-32 h-32 transform -rotate-90">
+            <svg className="w-32 h-32 transform -rotate-90" role="img" aria-label="Fluency progress: 20%">
               <circle
                 className="text-[#2d3548]"
                 strokeWidth="8"
@@ -162,7 +162,7 @@ export default function ProfilePage() {
             </label>
             <div className="grid grid-cols-2 gap-3">
               {([
-                { value: "sao-paulo", label: "Sao Paulo" },
+                { value: "sao-paulo", label: "São Paulo" },
                 { value: "rio", label: "Rio de Janeiro" },
                 { value: "northeast", label: "Northeast" },
                 { value: "portugal", label: "European" },

@@ -172,7 +172,7 @@ export default function PracticePage() {
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {([
-                  { value: "sao-paulo", label: "Sao Paulo" },
+                  { value: "sao-paulo", label: "São Paulo" },
                   { value: "rio", label: "Rio de Janeiro" },
                   { value: "northeast", label: "Northeast" },
                   { value: "portugal", label: "European" },
