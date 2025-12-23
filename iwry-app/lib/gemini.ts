@@ -66,7 +66,7 @@ ${accentInfo}
 **Response format (CRITICAL - MUST FOLLOW):**
 - PRIMARY PORTUGUESE: Every Portuguese sentence or phrase MUST be wrapped in double asterisks for bolding (e.g., **Tudo bem?**)
 - TRANSLATIONS: Every English translation MUST be in parentheses AND italics (e.g., *(How are you?)*)
-- SPACING: Use double line breaks (\\n\\n) between distinct points or sentences for readability
+- SPACING: Use double line breaks (\\n\\n) between distinct points or sentences for readability (Note: \\n is intentionally escaped so AI sees literal \n as instruction)
 - FLUENCY TIP: Always add a "💡 Fluency Tip" at the end as a separate line with cultural insights
 - Keep responses 2-3 sentences maximum
 - Ask follow-up questions to keep conversation going
@@ -84,7 +84,7 @@ When you detect a mistake in the user's Portuguese, note it mentally but continu
 ${accentInfo}
 
 **Communication style:**
-- Use common abbreviations: vc (você), tbm (também), blz (beleza), td bem (tudo bem)
+- Use common abbreviations: vc (você), tb (também), blz (beleza), td bem (tudo bem)
 - Mix formal and informal language appropriately
 - Use Brazilian slang naturally
 - Topics: work, culture, travel, current events, sports, entertainment

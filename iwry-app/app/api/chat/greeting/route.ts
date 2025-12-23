@@ -14,8 +14,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { conversationId, difficulty, accent } = body;
 
-    // Get AI greeting - send proper initial message
-    const result = await sendMessage("Olá! Vamos começar?", {
+    // Get AI greeting - use meta-instruction to generate initial greeting
+    const result = await sendMessage("Please greet the user warmly to start this Portuguese learning conversation. Follow all formatting rules.", {
       difficulty,
       accent,
       conversationHistory: [],
