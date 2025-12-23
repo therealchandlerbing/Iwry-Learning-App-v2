@@ -4,6 +4,8 @@ import { sendMessage } from "@/lib/gemini";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
+  let body: any; // Declare outside try block for error logging
+
   try {
     const session = await auth();
 
@@ -11,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
+    body = await request.json();
     const { conversationId, message, difficulty, accent, history } = body;
 
     // Save user message
@@ -101,8 +103,24 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Message error:", error);
+
+    // Provide more detailed error information for debugging
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    console.error("Error details:", {
+      message: errorMessage,
+      stack: errorStack,
+      conversationId: body?.conversationId,
+      difficulty: body?.difficulty,
+      accent: body?.accent,
+    });
+
     return NextResponse.json(
-      { error: "Failed to process message" },
+      {
+        error: "Failed to process message",
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+      },
       { status: 500 }
     );
   }

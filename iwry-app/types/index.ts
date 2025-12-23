@@ -2,6 +2,11 @@ export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
 
 export type PortugueseAccent = 'sao-paulo' | 'rio' | 'northeast' | 'portugal';
 
+// Shared constants for validation (v1 Architecture)
+export const VALID_DIFFICULTY_LEVELS: readonly DifficultyLevel[] = ['beginner', 'intermediate', 'advanced'] as const;
+
+export const VALID_PORTUGUESE_ACCENTS: readonly PortugueseAccent[] = ['sao-paulo', 'rio', 'northeast', 'portugal'] as const;
+
 export interface User {
   id: string;
   email: string;
