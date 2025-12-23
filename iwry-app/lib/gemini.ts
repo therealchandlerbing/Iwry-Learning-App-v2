@@ -1,10 +1,10 @@
 import { GoogleGenerativeAI, SchemaType, FunctionDeclaration } from "@google/generative-ai";
 import { DifficultyLevel, PortugueseAccent, Correction } from "@/types";
 
-// Use same environment variable name as v1 for consistency
-const apiKey = process.env.GEMINI_API_KEY;
+// Support both env var names for smooth transition (v1 uses GEMINI_API_KEY, v2 originally used GOOGLE_GENERATIVE_AI_API_KEY)
+const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is not set. Get your key from: https://aistudio.google.com/apikey");
+  throw new Error("GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY is not set. Get your key from: https://aistudio.google.com/apikey");
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
