@@ -64,9 +64,9 @@ ${accentInfo}
 - Categorize errors (verb tenses, gender agreement, prepositions, pronouns, article usage, word order)
 
 **Response format:**
-- Write Portuguese text in **bold** using markdown
-- Write English translations in *italics* using markdown
-- Include a 💡 Fluency Tip with cultural insights after most responses
+- Portuguese text can optionally use **bold** markdown for emphasis
+- English translations can optionally use *italics* for clarity
+- Optionally include a 💡 Fluency Tip with cultural insights
 - Keep responses 2-3 sentences maximum
 - Ask follow-up questions to keep conversation going
 
@@ -94,9 +94,9 @@ ${accentInfo}
 - Categorize errors for tracking
 
 **Response format:**
-- Write Portuguese text in **bold** using markdown
-- Write English translations in *italics* using markdown
-- Include a 💡 Fluency Tip with cultural insights or slang explanations when helpful
+- Portuguese text can optionally use **bold** markdown for emphasis
+- English translations can optionally use *italics* for clarity
+- Optionally include a 💡 Fluency Tip with cultural insights or slang explanations
 - Natural conversational flow, 2-4 sentences
 - Use emojis occasionally (🙂 😊 ✌️)
 - Ask engaging questions
@@ -123,9 +123,9 @@ ${accentInfo}
 - Focus on advanced grammar (subjunctive, conditionals, idiomatic expressions)
 
 **Response format:**
-- Write Portuguese text in **bold** using markdown
-- Write English translations in *italics* using markdown
-- Include a 💡 Fluency Tip with advanced cultural nuances or business etiquette when relevant
+- Portuguese text can optionally use **bold** markdown for emphasis
+- English translations can optionally use *italics* for clarity
+- Optionally include a 💡 Fluency Tip with advanced cultural nuances or business etiquette
 - Sophisticated, natural responses (3-5 sentences)
 - Challenge the user with advanced vocabulary
 - Discuss abstract concepts
@@ -216,15 +216,20 @@ export async function sendMessage(
     history: options.conversationHistory || []
   });
 
-  const result = await chat.sendMessage(userMessage);
-  const response = result.response;
+  try {
+    const result = await chat.sendMessage(userMessage);
+    const response = result.response;
 
-  // Extract text response
-  let textResponse = "";
-  const corrections: Partial<Correction>[] = [];
+    if (!response) {
+      throw new Error("No response received from Gemini API");
+    }
 
-  // Process all parts of the response
-  for (const part of response.candidates?.[0]?.content?.parts || []) {
+    // Extract text response
+    let textResponse = "";
+    const corrections: Partial<Correction>[] = [];
+
+    // Process all parts of the response
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
     if ('text' in part && part.text) {
       textResponse += part.text;
     }
@@ -254,10 +259,25 @@ export async function sendMessage(
     }
   }
 
-  return {
-    response: textResponse,
-    corrections: corrections as Correction[]
-  };
+    // Ensure we have a response
+    if (!textResponse || textResponse.trim() === "") {
+      // Fallback to a friendly error message in Portuguese
+      textResponse = "Desculpe, houve um problema. Pode repetir? (Sorry, there was a problem. Can you repeat?)";
+    }
+
+    return {
+      response: textResponse,
+      corrections: corrections as Correction[]
+    };
+  } catch (error) {
+    console.error("Gemini API error:", error);
+
+    // Re-throw with more context
+    if (error instanceof Error) {
+      throw new Error(`Gemini API failed: ${error.message}`);
+    }
+    throw new Error("Gemini API failed with unknown error");
+  }
 }
 
 // Dictionary Definition Interface (v1 Architecture - Structured Output)
