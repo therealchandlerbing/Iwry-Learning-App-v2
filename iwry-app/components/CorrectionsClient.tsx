@@ -23,9 +23,10 @@ interface Correction {
   confidence_score: number;
   created_at: string;
   difficulty_level: string;
-  next_review_date?: string;
-  mastery_status?: string;
-  times_practiced?: number;
+  next_review_date?: string | null;
+  mastery_status?: string | null;
+  times_practiced?: number | null;
+  last_practiced_at?: string | null;
 }
 
 interface CorrectionsClientProps {
@@ -359,7 +360,7 @@ export default function CorrectionsClient({
                               {correction.difficulty_level}
                             </span>
                             <span>{formatDate(correction.created_at)}</span>
-                            {correction.times_practiced > 0 && (
+                            {(correction.times_practiced ?? 0) > 0 && (
                               <span className="text-[#00d9ff]">
                                 Practiced: {correction.times_practiced}x
                               </span>
