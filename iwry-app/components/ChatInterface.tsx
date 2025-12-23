@@ -48,11 +48,26 @@ export default function ChatInterface({
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Ensure the ref is attached to a valid DOM node before scrolling
+    if (messagesEndRef.current && messagesEndRef.current instanceof HTMLElement) {
+      try {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      } catch (error) {
+        // Gracefully handle any scroll errors
+        console.error('Error scrolling to bottom:', error);
+      }
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Use requestAnimationFrame to ensure DOM is ready
+    const scrollTimeout = requestAnimationFrame(() => {
+      scrollToBottom();
+    });
+
+    return () => {
+      cancelAnimationFrame(scrollTimeout);
+    };
   }, [messages]);
 
   // Auto-resize textarea (client-side only)
@@ -63,13 +78,20 @@ export default function ChatInterface({
     const textarea = inputRef.current;
     if (!textarea || !(textarea instanceof HTMLTextAreaElement)) return;
 
-    try {
-      textarea.style.height = 'auto';
-      textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
-    } catch (error) {
-      // Gracefully handle any errors during height adjustment
-      console.error('Error adjusting textarea height:', error);
-    }
+    // Use requestAnimationFrame to ensure DOM is ready for measurement
+    const frameId = requestAnimationFrame(() => {
+      try {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+      } catch (error) {
+        // Gracefully handle any errors during height adjustment
+        console.error('Error adjusting textarea height:', error);
+      }
+    });
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
   }, [input]);
 
   // Send first AI message
@@ -77,6 +99,7 @@ export default function ChatInterface({
     if (messages.length === 0) {
       sendAIGreeting();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle voice transcript
