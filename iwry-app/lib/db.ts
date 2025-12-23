@@ -63,6 +63,10 @@ export async function initializeDatabase() {
         explanation TEXT NOT NULL,
         grammar_category VARCHAR(100) NOT NULL,
         confidence_score INTEGER DEFAULT 1,
+        next_review_date TIMESTAMPTZ,
+        mastery_status VARCHAR(20) DEFAULT 'learning',
+        times_practiced INTEGER DEFAULT 0,
+        last_practiced_at TIMESTAMPTZ,
         created_at TIMESTAMP DEFAULT NOW()
       )
     `;

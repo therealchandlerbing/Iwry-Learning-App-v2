@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ChatInterface from "@/components/ChatInterface";
 import { DifficultyLevel, PortugueseAccent } from "@/types";
+import { SessionAnalysis } from "@/lib/gemini";
 import { Sparkles, Trophy, Lightbulb } from "lucide-react";
 
 export default function PracticePage() {
@@ -14,6 +15,7 @@ export default function PracticePage() {
   const [accent, setAccent] = useState<PortugueseAccent>("sao-paulo");
   const [showSummary, setShowSummary] = useState(false);
   const [summary, setSummary] = useState("");
+  const [analysis, setAnalysis] = useState<SessionAnalysis | null>(null);
 
   useEffect(() => {
     // Load user preferences
@@ -66,6 +68,7 @@ export default function PracticePage() {
 
       if (response.ok) {
         setSummary(data.summary);
+        setAnalysis(data.analysis);
         setShowSummary(true);
       }
     } catch (error) {
@@ -82,22 +85,113 @@ export default function PracticePage() {
   // Summary Screen
   if (showSummary) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-8">
+      <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="rounded-2xl border border-border bg-[#1e2433] p-8">
           <div className="text-center mb-6">
             <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-[#10b981]/10 border border-[#10b981]/30 flex items-center justify-center glow-green">
               <Trophy className="h-8 w-8 text-[#10b981]" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground">Great job!</h2>
+            <h2 className="text-2xl font-bold text-foreground">Excellent Work!</h2>
             <p className="mt-2 text-muted-foreground">
               You've completed a Portuguese practice session
             </p>
           </div>
 
+          {/* Performance Summary */}
           {summary && (
             <div className="mb-6 rounded-lg bg-[#10b981]/10 border border-[#10b981]/30 p-4">
-              <h3 className="font-semibold text-[#10b981] mb-2">Session Summary</h3>
+              <h3 className="font-semibold text-[#10b981] mb-2 flex items-center gap-2">
+                <Trophy className="h-4 w-4" />
+                Performance Summary
+              </h3>
               <p className="text-sm text-foreground whitespace-pre-wrap">{summary}</p>
+            </div>
+          )}
+
+          {/* Enhanced Analysis */}
+          {analysis && (
+            <div className="space-y-4 mb-6">
+              {/* Topics Discussed */}
+              {analysis.topicsDiscussed && analysis.topicsDiscussed.length > 0 && (
+                <div className="rounded-lg bg-[#00d9ff]/10 border border-[#00d9ff]/30 p-4">
+                  <h3 className="font-semibold text-[#00d9ff] mb-2 flex items-center gap-2">
+                    <Lightbulb className="h-4 w-4" />
+                    Topics Covered
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.topicsDiscussed.map((topic: string, i: number) => (
+                      <span
+                        key={i}
+                        className="px-3 py-1 rounded-full bg-[#00d9ff]/20 text-[#00d9ff] text-sm"
+                      >
+                        {topic}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Grammar Points */}
+              {analysis.grammarPoints && analysis.grammarPoints.length > 0 && (
+                <div className="rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/30 p-4">
+                  <h3 className="font-semibold text-[#a855f7] mb-3">
+                    Grammar Practiced
+                  </h3>
+                  <div className="space-y-2">
+                    {analysis.grammarPoints.map((point: any, i: number) => (
+                      <div key={i}>
+                        <p className="text-sm font-medium text-foreground capitalize">
+                          {point.category}
+                        </p>
+                        <ul className="ml-4 text-xs text-muted-foreground">
+                          {point.examples.map((ex: string, j: number) => (
+                            <li key={j}>• {ex}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Vocabulary Learned */}
+              {analysis.vocabularyLearned && analysis.vocabularyLearned.length > 0 && (
+                <div className="rounded-lg bg-[#ec4899]/10 border border-[#ec4899]/30 p-4">
+                  <h3 className="font-semibold text-[#ec4899] mb-3">
+                    New Vocabulary ({analysis.vocabularyLearned.length} words)
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {analysis.vocabularyLearned.slice(0, 6).map((vocab: any, i: number) => (
+                      <div key={i} className="text-sm">
+                        <span className="font-medium text-foreground">{vocab.word}</span>
+                        <span className="text-muted-foreground"> - {vocab.translation}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {analysis.vocabularyLearned.length > 6 && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      + {analysis.vocabularyLearned.length - 6} more words saved to your vocabulary
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Recommended Next Steps */}
+              {analysis.recommendedNextSteps && analysis.recommendedNextSteps.length > 0 && (
+                <div className="rounded-lg bg-[#f97316]/10 border border-[#f97316]/30 p-4">
+                  <h3 className="font-semibold text-[#f97316] mb-2">
+                    What to Focus On Next
+                  </h3>
+                  <ul className="space-y-1 text-sm text-foreground">
+                    {analysis.recommendedNextSteps.map((step: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-[#f97316] mt-0.5">→</span>
+                        {step}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 
@@ -113,6 +207,7 @@ export default function PracticePage() {
                 setIsStarted(false);
                 setShowSummary(false);
                 setConversationId(null);
+                setAnalysis(null);
                 startConversation();
               }}
               className="w-full rounded-lg border border-border bg-[#1e2433] px-4 py-3 font-semibold text-foreground hover:border-[#00d9ff]/50 hover:bg-[#00d9ff]/10 transition-all duration-300"

@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, X, Mic, Languages } from "lucide-react";
+import { Send, X, Mic, Languages, MicOff, Volume2 } from "lucide-react";
 import { ChatMessage } from "@/types";
 import { formatTime } from "@/lib/utils";
+import { useVoiceRecording } from "@/hooks/useVoiceRecording";
+import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 
 interface ChatInterfaceProps {
   conversationId: string;
@@ -22,8 +24,27 @@ export default function ChatInterface({
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showTranslation, setShowTranslation] = useState<{word: string, translation: string} | null>(null);
+  const [voiceMode, setVoiceMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Voice hooks
+  const {
+    status: voiceStatus,
+    transcript,
+    error: voiceError,
+    isSupported: isVoiceSupported,
+    startListening,
+    stopListening,
+    resetTranscript,
+  } = useVoiceRecording();
+
+  const {
+    speak,
+    stop: stopSpeaking,
+    isSpeaking,
+    isSupported: isTTSSupported,
+  } = useTextToSpeech();
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -58,6 +79,31 @@ export default function ChatInterface({
     }
   }, []);
 
+  // Handle voice transcript
+  useEffect(() => {
+    if (voiceStatus === "processing" && transcript) {
+      // User finished speaking, send the transcript
+      setInput(transcript);
+      // Auto-submit the message
+      setTimeout(() => {
+        if (transcript) {
+          handleVoiceMessage(transcript);
+        }
+      }, 500);
+    }
+  }, [voiceStatus, transcript]);
+
+  // Auto-speak AI responses in voice mode
+  useEffect(() => {
+    if (voiceMode && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === "assistant" && !isSpeaking) {
+        // Speak the AI's response
+        speak(lastMessage.content);
+      }
+    }
+  }, [messages, voiceMode]);
+
   const sendAIGreeting = async () => {
     setIsLoading(true);
     try {
@@ -83,19 +129,17 @@ export default function ChatInterface({
     }
   };
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!input.trim() || isLoading) return;
+  // Unified message sending function (used by both text and voice input)
+  const sendMessageInternal = async (messageContent: string) => {
+    if (!messageContent.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
       role: "user",
-      content: input.trim(),
+      content: messageContent.trim(),
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
     setIsLoading(true);
 
     try {
@@ -104,7 +148,7 @@ export default function ChatInterface({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conversationId,
-          message: input.trim(),
+          message: messageContent.trim(),
           difficulty,
           accent,
           history: messages,
@@ -127,7 +171,6 @@ export default function ChatInterface({
       }
     } catch (error) {
       console.error("Failed to send message:", error);
-      // Add error message
       setMessages((prev) => [
         ...prev,
         {
@@ -138,7 +181,31 @@ export default function ChatInterface({
       ]);
     } finally {
       setIsLoading(false);
-      inputRef.current?.focus();
+    }
+  };
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendMessageInternal(input);
+    setInput("");
+    inputRef.current?.focus();
+  };
+
+  const handleVoiceMessage = async (message: string) => {
+    resetTranscript();
+    await sendMessageInternal(message);
+  };
+
+  const handleVoiceToggle = () => {
+    if (voiceStatus === "listening") {
+      stopListening();
+    } else {
+      if (!isVoiceSupported) {
+        alert("Voice recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
+        return;
+      }
+      setVoiceMode(true);
+      startListening();
     }
   };
 
@@ -262,6 +329,39 @@ export default function ChatInterface({
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto bg-[#0f1419] py-4">
+        {/* Voice Status Indicator */}
+        {voiceStatus === "listening" && (
+          <div className="mb-4 mx-4 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/30 p-3">
+            <div className="flex items-center gap-2 text-[#ef4444]">
+              <Mic className="h-4 w-4 animate-pulse" />
+              <span className="text-sm font-medium">Listening...</span>
+            </div>
+            {transcript && (
+              <p className="mt-2 text-sm text-foreground italic">
+                "{transcript}"
+              </p>
+            )}
+          </div>
+        )}
+
+        {isSpeaking && (
+          <div className="mb-4 mx-4 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/30 p-3">
+            <div className="flex items-center gap-2 text-[#a855f7]">
+              <Volume2 className="h-4 w-4 animate-pulse" />
+              <span className="text-sm font-medium">AI is speaking...</span>
+            </div>
+          </div>
+        )}
+
+        {voiceError && (
+          <div className="mb-4 mx-4 rounded-lg bg-[#ef4444]/10 border border-[#ef4444]/30 p-3">
+            <div className="flex items-center gap-2 text-[#ef4444]">
+              <X className="h-4 w-4" />
+              <span className="text-sm">{voiceError}</span>
+            </div>
+          </div>
+        )}
+
         {messages.map(renderMessage)}
 
         {isLoading && (
@@ -345,11 +445,33 @@ export default function ChatInterface({
           {/* SPEAK button */}
           <button
             type="button"
-            className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#ec4899] to-[#d946ef] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-[#ec4899]/30 hover:shadow-xl hover:shadow-[#ec4899]/40 transition-all duration-300"
+            onClick={handleVoiceToggle}
+            disabled={isLoading}
+            className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-300 ${
+              voiceStatus === "listening"
+                ? "bg-gradient-to-r from-[#ef4444] to-[#dc2626] shadow-[#ef4444]/50 animate-pulse"
+                : "bg-gradient-to-r from-[#ec4899] to-[#d946ef] shadow-[#ec4899]/30 hover:shadow-xl hover:shadow-[#ec4899]/40"
+            } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            <Mic className="h-4 w-4" />
-            SPEAK
-            <Mic className="h-4 w-4" />
+            {voiceStatus === "listening" ? (
+              <>
+                <MicOff className="h-4 w-4" />
+                STOP
+                <MicOff className="h-4 w-4" />
+              </>
+            ) : isSpeaking ? (
+              <>
+                <Volume2 className="h-4 w-4 animate-pulse" />
+                SPEAKING
+                <Volume2 className="h-4 w-4 animate-pulse" />
+              </>
+            ) : (
+              <>
+                <Mic className="h-4 w-4" />
+                SPEAK
+                <Mic className="h-4 w-4" />
+              </>
+            )}
           </button>
 
           {/* Send button */}
