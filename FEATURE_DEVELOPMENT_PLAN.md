@@ -1,6 +1,6 @@
 # Iwry Learning App - Feature Development Plan
 
-**Last Updated:** December 23, 2024
+**Last Updated:** December 23, 2025
 **Current Status:** MVP Phase 1 (Core Chat) Complete
 **Next Phase:** MVP Phase 2 (Enhanced Features)
 
@@ -92,6 +92,15 @@ import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 const client = new TextToSpeechClient();
 ```
 
+**⚠️ Browser Compatibility Note:**
+- `webkitSpeechRecognition` is a vendor-prefixed, non-standard API
+- Supported: Chrome, Edge, and other Chromium-based browsers
+- **NOT supported:** Firefox, Safari
+- For broader browser support, consider:
+  - Explicitly mentioning browser requirements to users
+  - Using a cross-browser library or paid service as fallback (e.g., Google Cloud Speech-to-Text, Azure Speech Service)
+  - Providing graceful degradation to text-only mode for unsupported browsers
+
 **Files to Create/Modify:**
 - `components/VoiceRecorder.tsx` (new)
 - `app/api/voice/transcribe/route.ts` (new)
@@ -177,10 +186,10 @@ interface SessionSummary {
 
 **Database Changes:**
 ```sql
-ALTER TABLE corrections ADD COLUMN next_review_date TIMESTAMP;
+ALTER TABLE corrections ADD COLUMN next_review_date TIMESTAMPTZ;
 ALTER TABLE corrections ADD COLUMN mastery_status VARCHAR(20) DEFAULT 'learning';
 ALTER TABLE corrections ADD COLUMN times_practiced INTEGER DEFAULT 0;
-ALTER TABLE corrections ADD COLUMN last_practiced_at TIMESTAMP;
+ALTER TABLE corrections ADD COLUMN last_practiced_at TIMESTAMPTZ;
 ```
 
 **Estimated Time:** 3-4 days
@@ -220,11 +229,11 @@ CREATE TABLE flashcards (
   front_text TEXT NOT NULL,
   back_text TEXT NOT NULL,
   card_type VARCHAR(50) NOT NULL, -- translation, fill_blank, conjugation, multiple_choice
-  next_review_date TIMESTAMP NOT NULL,
+  next_review_date TIMESTAMPTZ NOT NULL,
   interval_days INTEGER DEFAULT 1,
   ease_factor DECIMAL(3,2) DEFAULT 2.5,
   times_reviewed INTEGER DEFAULT 0,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_flashcards_user_id ON flashcards(user_id);
@@ -286,6 +295,29 @@ ALTER TABLE vocabulary ADD COLUMN tags TEXT[];
 ALTER TABLE vocabulary ADD COLUMN confidence_score INTEGER DEFAULT 1;
 ALTER TABLE vocabulary ADD COLUMN notes TEXT;
 ```
+
+**📝 Design Note - Tags:**
+The `TEXT[]` array approach for tags is simple and works well for initial implementation. However, for better scalability and advanced features (tag analytics, autocomplete, related tags), consider a normalized approach:
+
+```sql
+-- Alternative normalized design for future consideration:
+CREATE TABLE tags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(50) UNIQUE NOT NULL
+);
+
+CREATE TABLE vocabulary_tags (
+  vocabulary_id UUID REFERENCES vocabulary(id) ON DELETE CASCADE,
+  tag_id UUID REFERENCES tags(id) ON DELETE CASCADE,
+  PRIMARY KEY (vocabulary_id, tag_id)
+);
+```
+
+This structure enables:
+- Tag popularity analytics
+- Tag-based recommendations
+- Efficient filtering and search
+- Tag autocomplete and suggestions
 
 **Estimated Time:** 3 days
 
@@ -365,7 +397,7 @@ CREATE TABLE lessons (
   difficulty_level VARCHAR(20) NOT NULL,
   category VARCHAR(100) NOT NULL,
   content JSONB NOT NULL, -- structured lesson content
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE user_lesson_progress (
@@ -373,7 +405,7 @@ CREATE TABLE user_lesson_progress (
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   lesson_id UUID REFERENCES lessons(id) ON DELETE CASCADE,
   status VARCHAR(20) DEFAULT 'not_started', -- not_started, in_progress, completed
-  completed_at TIMESTAMP,
+  completed_at TIMESTAMPTZ,
   score INTEGER,
   UNIQUE(user_id, lesson_id)
 );
@@ -448,8 +480,8 @@ CREATE TABLE daily_goals (
   target_count INTEGER,
   completed_count INTEGER DEFAULT 0,
   status VARCHAR(20) DEFAULT 'pending', -- pending, completed, skipped
-  created_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(user_id, goal_date)
+  created_at TIMESTAMPTZ DEFAULT NOW()
+  -- Note: No UNIQUE constraint to allow multiple distinct goals per day
 );
 ```
 
@@ -506,6 +538,22 @@ CREATE TABLE daily_goals (
 - [ ] Splash screen
 - [ ] Push notifications (optional, future)
 - [ ] Install prompt UI
+
+**💡 Recommendation - Use Workbox:**
+Instead of writing a service worker from scratch (which is complex and error-prone), **strongly consider using [Workbox](https://developers.google.com/web/tools/workbox)** by Google. It provides:
+- Pre-built caching strategies (Cache First, Network First, Stale While Revalidate)
+- Automatic asset versioning and updates
+- Background sync for offline operations
+- Best practices for lifecycle management
+- Simplified routing and precaching
+
+```bash
+npm install workbox-webpack-plugin
+# or for Next.js:
+npm install next-pwa
+```
+
+This will significantly reduce development time and ensure a robust, production-ready PWA implementation.
 
 **Files to Create:**
 - `public/manifest.json`
@@ -600,14 +648,14 @@ CREATE TABLE conversation_scenarios (
   category VARCHAR(100) NOT NULL, -- business, casual, travel, etc.
   system_prompt TEXT NOT NULL,
   vocabulary_hints TEXT[],
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE user_scenario_progress (
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   scenario_id UUID REFERENCES conversation_scenarios(id) ON DELETE CASCADE,
   times_practiced INTEGER DEFAULT 0,
-  last_practiced_at TIMESTAMP,
+  last_practiced_at TIMESTAMPTZ,
   PRIMARY KEY (user_id, scenario_id)
 );
 ```
