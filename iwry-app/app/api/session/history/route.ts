@@ -59,7 +59,7 @@ export async function GET() {
             AND first_seen_at <= ${conv.ended_at}
             LIMIT 10
           `;
-          vocabRows = result.rows;
+          vocabRows = result.rows as Array<{ word: string; translation: string }>;
         } else {
           const result = await sql`
             SELECT word, translation
@@ -68,7 +68,7 @@ export async function GET() {
             AND first_seen_at >= ${conv.started_at}
             LIMIT 10
           `;
-          vocabRows = result.rows;
+          vocabRows = result.rows as Array<{ word: string; translation: string }>;
         }
 
         // Generate a brief summary from the conversation
