@@ -46,7 +46,7 @@ export function getSystemPrompt(
   const accentInfo = accentInstructions[accent];
 
   const basePrompts: Record<DifficultyLevel, string> = {
-    beginner: `You are a friendly Portuguese tutor speaking Brazilian Portuguese.
+    beginner: `You are Iwry, a friendly Portuguese tutor speaking Brazilian Portuguese.
 
 ${accentInfo}
 
@@ -61,16 +61,24 @@ ${accentInfo}
 - Gently correct mistakes when they occur
 - Explain WHY something is correct
 - Provide the corrected version
-- Categorize errors (verb conjugation, gender agreement, prepositions, etc.)
+- Categorize errors (verb tenses, gender agreement, prepositions, pronouns, article usage, word order)
 
-**Response format:**
-- Respond naturally in Portuguese
+**Response format - CRITICAL:**
+- Write Portuguese text in **bold** using markdown: **Portuguese text here**
+- Write English translations in *italics* using markdown: *English translation here*
+- After each response, include a 💡 Fluency Tip with cultural insights or language tips
+- Example format:
+  **Olá! Como você está?** *Hello! How are you?*
+
+  💡 Fluency Tip: Brazilians often use "tudo bem?" as a casual greeting, similar to "what's up?" in English!
+
 - Keep responses 2-3 sentences maximum
 - Ask follow-up questions to keep conversation going
+- Always include the fluency tip
 
 When you detect a mistake in the user's Portuguese, note it mentally but continue the conversation naturally. Provide gentle corrections.`,
 
-    intermediate: `You are a Brazilian friend chatting naturally in Portuguese.
+    intermediate: `You are Iwry, a Brazilian friend chatting naturally in Portuguese.
 
 ${accentInfo}
 
@@ -86,13 +94,22 @@ ${accentInfo}
 - Provide explanations when asked
 - Categorize errors for tracking
 
-**Response format:**
+**Response format - CRITICAL:**
+- Write Portuguese text in **bold** using markdown: **Portuguese text here**
+- Write English translations in *italics* using markdown: *English translation here*
+- After each response, include a 💡 Fluency Tip with cultural insights or slang explanations
+- Example format:
+  **E aí, cara! Tudo na paz?** *Hey, dude! Everything cool?*
+
+  💡 Fluency Tip: "Cara" literally means "face" but it's used like "dude" or to express surprise in Brazilian slang!
+
 - Natural conversational flow
 - 2-4 sentences
 - Use emojis occasionally (🙂 😊 ✌️)
-- Ask engaging questions`,
+- Ask engaging questions
+- Always include the fluency tip`,
 
-    advanced: `You are a Brazilian business colleague or friend having sophisticated conversations.
+    advanced: `You are Iwry, a Brazilian business colleague or friend having sophisticated conversations.
 
 ${accentInfo}
 
@@ -108,17 +125,26 @@ ${accentInfo}
 - Provide nuanced explanations
 - Focus on advanced grammar (subjunctive, conditionals, idiomatic expressions)
 
-**Response format:**
+**Response format - CRITICAL:**
+- Write Portuguese text in **bold** using markdown: **Portuguese text here**
+- Write English translations in *italics* using markdown: *English translation here*
+- After each response, include a 💡 Fluency Tip with advanced cultural nuances or business etiquette
+- Example format:
+  **Precisamos alinhar as expectativas antes da reunião.** *We need to align expectations before the meeting.*
+
+  💡 Fluency Tip: In Brazilian business culture, "alinhar" (align) is frequently used for getting everyone on the same page, showing the collaborative work culture!
+
 - Sophisticated, natural responses
 - 3-5 sentences
 - Challenge the user with advanced vocabulary
-- Discuss abstract concepts`
+- Discuss abstract concepts
+- Always include the fluency tip`
   };
 
   return basePrompts[difficulty];
 }
 
-// Function declaration for error detection
+// Function declaration for error detection (aligned with v1 architecture)
 const correctionFunctionDeclaration: FunctionDeclaration = {
   name: "recordCorrection",
   description: "Record a grammatical or vocabulary mistake made by the user for later review",
@@ -139,17 +165,15 @@ const correctionFunctionDeclaration: FunctionDeclaration = {
       },
       category: {
         type: SchemaType.STRING,
-        description: "Grammar category",
+        description: "Grammar category - aligned with v1 architecture",
         format: "enum",
         enum: [
-          "verb_conjugation",
-          "gender_agreement",
+          "verb_tenses",
           "prepositions",
-          "subjunctive_mood",
-          "word_choice",
-          "pronunciation",
-          "formal_informal",
-          "other"
+          "pronouns",
+          "gender_agreement",
+          "article_usage",
+          "word_order"
         ]
       },
       severity: {
@@ -167,12 +191,26 @@ export interface GeminiChatOptions {
   conversationHistory?: Array<{ role: string; parts: Array<{ text: string }> }>;
 }
 
+// AI Models Configuration (v1 Architecture)
+const AI_MODELS = {
+  // Chat Conversations - Fast responses, great for dialogue
+  CHAT: "gemini-2.0-flash-exp", // Gemini 3 Flash Preview equivalent
+  // Custom Lessons - Deep reasoning for curriculum design
+  LESSONS: "gemini-1.5-pro-latest", // Gemini 3 Pro Preview equivalent
+  // Dictionary Lookup - Instant, accurate translations
+  DICTIONARY: "gemini-2.0-flash-exp", // Gemini 3 Flash Preview equivalent
+  // Real-Time Voice - Optimized for live voice streaming
+  VOICE: "gemini-2.0-flash-exp", // Gemini 2.5 Flash Native Audio equivalent
+  // Text-to-Speech - Natural Brazilian Portuguese voice
+  TTS: "gemini-2.0-flash-exp" // Gemini 2.5 Flash TTS equivalent
+} as const;
+
 export async function sendMessage(
   userMessage: string,
   options: GeminiChatOptions
 ): Promise<{ response: string; corrections: Correction[] }> {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-exp",
+    model: AI_MODELS.CHAT, // Using optimized chat model from v1 architecture
     systemInstruction: getSystemPrompt(options.difficulty, options.accent),
     tools: [{
       functionDeclarations: [correctionFunctionDeclaration]
@@ -227,10 +265,86 @@ export async function sendMessage(
   };
 }
 
-// Function to translate a word/phrase from Portuguese to English
+// Dictionary Definition Interface (v1 Architecture - Structured Output)
+export interface DictionaryDefinition {
+  word: string;
+  translation: string;
+  partOfSpeech: string;
+  pronunciation?: string;
+  conjugations?: string[];
+  examples: Array<{
+    portuguese: string;
+    english: string;
+  }>;
+  synonyms?: string[];
+  antonyms?: string[];
+}
+
+// Function to get comprehensive dictionary definition with structured JSON output
+export async function getDictionaryDefinition(word: string): Promise<DictionaryDefinition> {
+  const model = genAI.getGenerativeModel({
+    model: AI_MODELS.DICTIONARY, // Using optimized dictionary model from v1 architecture
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          word: { type: SchemaType.STRING },
+          translation: { type: SchemaType.STRING },
+          partOfSpeech: { type: SchemaType.STRING },
+          pronunciation: { type: SchemaType.STRING },
+          conjugations: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING }
+          },
+          examples: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                portuguese: { type: SchemaType.STRING },
+                english: { type: SchemaType.STRING }
+              },
+              required: ["portuguese", "english"]
+            }
+          },
+          synonyms: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING }
+          },
+          antonyms: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING }
+          }
+        },
+        required: ["word", "translation", "partOfSpeech", "examples"]
+      }
+    }
+  });
+
+  const prompt = `Provide a comprehensive dictionary entry for this Portuguese word: "${word}"
+
+Include:
+1. The word itself
+2. English translation
+3. Part of speech (noun, verb, adjective, etc.)
+4. Pronunciation guide (IPA if possible)
+5. For verbs: conjugations for present, past, and future tense (1st person singular)
+6. At least 2 example sentences with English translations
+7. Synonyms (if applicable)
+8. Antonyms (if applicable)
+
+Provide the response in the specified JSON format.`;
+
+  const result = await model.generateContent(prompt);
+  const response = result.response;
+  return JSON.parse(response.text());
+}
+
+// Function to translate a word/phrase from Portuguese to English (quick translation)
 export async function translateWord(word: string): Promise<string> {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-exp"
+    model: AI_MODELS.DICTIONARY // Using optimized dictionary model from v1 architecture
   });
 
   const prompt = `Translate this Portuguese word or phrase to English. Provide ONLY the translation, nothing else.
@@ -243,13 +357,180 @@ English:`;
   return response.text().trim();
 }
 
+// Quiz Question Interface (v1 Architecture - Structured Output)
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+  difficulty: DifficultyLevel;
+}
+
+// Custom Lesson Module Interface (v1 Architecture - Structured Output)
+export interface CustomLessonModule {
+  title: string;
+  description: string;
+  difficulty: DifficultyLevel;
+  estimatedMinutes: number;
+  objectives: string[];
+  sections: Array<{
+    heading: string;
+    content: string;
+    examples: Array<{
+      portuguese: string;
+      english: string;
+    }>;
+  }>;
+  practiceExercises: string[];
+  vocabulary: Array<{
+    word: string;
+    translation: string;
+    context: string;
+  }>;
+}
+
+// Generate quiz questions with structured JSON output
+export async function generateQuiz(
+  topic: string,
+  difficulty: DifficultyLevel,
+  questionCount: number = 5
+): Promise<QuizQuestion[]> {
+  const model = genAI.getGenerativeModel({
+    model: AI_MODELS.LESSONS, // Using Pro model for deeper reasoning
+    generationConfig: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.ARRAY,
+        items: {
+          type: SchemaType.OBJECT,
+          properties: {
+            question: { type: SchemaType.STRING },
+            options: {
+              type: SchemaType.ARRAY,
+              items: { type: SchemaType.STRING }
+            },
+            correctAnswer: { type: SchemaType.NUMBER },
+            explanation: { type: SchemaType.STRING },
+            difficulty: { type: SchemaType.STRING }
+          },
+          required: ["question", "options", "correctAnswer", "explanation", "difficulty"]
+        }
+      }
+    }
+  });
+
+  const prompt = `Generate ${questionCount} multiple-choice quiz questions about "${topic}" in Portuguese at ${difficulty} level.
+
+Each question should:
+1. Test understanding of Portuguese grammar, vocabulary, or cultural knowledge
+2. Have 4 answer options
+3. Include the correct answer index (0-3)
+4. Provide an explanation for why the answer is correct
+5. Match the difficulty level: ${difficulty}
+
+Provide the response as a JSON array.`;
+
+  const result = await model.generateContent(prompt);
+  return JSON.parse(result.response.text());
+}
+
+// Generate custom lesson module with structured JSON output
+export async function generateCustomLesson(
+  topic: string,
+  difficulty: DifficultyLevel,
+  userGoals?: string[]
+): Promise<CustomLessonModule> {
+  const model = genAI.getGenerativeModel({
+    model: AI_MODELS.LESSONS, // Using Pro model for curriculum design
+    generationConfig: {
+      responseMimeType: "application/json"
+    }
+  });
+
+  const goalsText = userGoals ? `\nUser Goals: ${userGoals.join(", ")}` : "";
+
+  const prompt = `Create a comprehensive Portuguese lesson module about "${topic}" at ${difficulty} level.${goalsText}
+
+Structure the lesson with:
+1. Title and description
+2. Estimated time to complete (in minutes)
+3. Learning objectives (3-5 specific goals)
+4. Multiple sections with:
+   - Section heading
+   - Educational content
+   - Example sentences (Portuguese with English translations)
+5. Practice exercises (5-7 prompts for the student)
+6. Vocabulary list with translations and context
+
+The lesson should be engaging, culturally relevant, and appropriate for ${difficulty} learners.
+
+Provide the response in valid JSON format matching the CustomLessonModule structure.`;
+
+  const result = await model.generateContent(prompt);
+  return JSON.parse(result.response.text());
+}
+
+// Session Analysis Interface (v1 Architecture - Structured Output)
+export interface SessionAnalysis {
+  duration: number;
+  topicsDiscussed: string[];
+  vocabularyLearned: Array<{
+    word: string;
+    translation: string;
+    context: string;
+  }>;
+  grammarPoints: Array<{
+    category: string;
+    examples: string[];
+  }>;
+  performanceSummary: string;
+  recommendedNextSteps: string[];
+}
+
+// Analyze conversation session with structured output
+export async function analyzeSession(
+  messages: Array<{ role: string; content: string }>,
+  corrections: Array<{ mistake: string; correction: string; explanation: string; grammarCategory: string }>
+): Promise<SessionAnalysis> {
+  const model = genAI.getGenerativeModel({
+    model: AI_MODELS.CHAT,
+    generationConfig: {
+      responseMimeType: "application/json"
+    }
+  });
+
+  const conversationText = messages.map(m => `${m.role}: ${m.content}`).join('\n');
+  const correctionsText = corrections.map(c =>
+    `${c.mistake} → ${c.correction} [${c.grammarCategory}]`
+  ).join('\n');
+
+  const prompt = `Analyze this Portuguese learning session and extract structured insights.
+
+CONVERSATION:
+${conversationText}
+
+CORRECTIONS:
+${correctionsText}
+
+Provide a JSON response with:
+1. duration: estimated session duration in minutes
+2. topicsDiscussed: array of topics/themes covered
+3. vocabularyLearned: new words with translations and context
+4. grammarPoints: grammar categories practiced with examples
+5. performanceSummary: encouraging 2-3 sentence overview
+6. recommendedNextSteps: 3-4 specific suggestions for continued learning`;
+
+  const result = await model.generateContent(prompt);
+  return JSON.parse(result.response.text());
+}
+
 // Generate conversation summary
 export async function generateConversationSummary(
   messages: Array<{ role: string; content: string }>,
   corrections: Array<{ mistake: string; correction: string; explanation: string }>
 ): Promise<string> {
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.0-flash-exp"
+    model: AI_MODELS.CHAT // Using chat model for summaries
   });
 
   const conversationText = messages
