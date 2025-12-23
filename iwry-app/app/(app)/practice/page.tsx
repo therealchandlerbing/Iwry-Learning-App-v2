@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import ChatInterface from "@/components/ChatInterface";
 import { DifficultyLevel, PortugueseAccent } from "@/types";
 import { SessionAnalysis } from "@/lib/gemini";
-import { Sparkles, Trophy, Lightbulb } from "lucide-react";
+import { Sparkles, Lightbulb, X, ArrowRight, CheckCircle2 } from "lucide-react";
+
+const MAX_SESSIONS = 30;
 
 export default function PracticePage() {
   const router = useRouter();
@@ -21,6 +23,29 @@ export default function PracticePage() {
     // Load user preferences
     loadUserSettings();
   }, []);
+
+  // Save to learning log when summary is shown
+  useEffect(() => {
+    if (showSummary && analysis && conversationId) {
+      try {
+        const existingSessions = JSON.parse(localStorage.getItem("iwry_learning_sessions") || "[]");
+        const newSession = {
+          id: conversationId,
+          date: new Date().toISOString(),
+          level: difficulty,
+          summary: summary || analysis.performanceSummary || "Practice session completed",
+          vocabCount: analysis.vocabularyLearned?.length || 0,
+          feedback: analysis.performanceSummary,
+          vocabularyLearned: analysis.vocabularyLearned?.slice(0, 5),
+          nextStep: analysis.recommendedNextSteps?.[0] || "Continue practicing to improve your fluency!",
+        };
+        const updatedSessions = [newSession, ...existingSessions].slice(0, MAX_SESSIONS);
+        localStorage.setItem("iwry_learning_sessions", JSON.stringify(updatedSessions));
+      } catch (error) {
+        console.error("Failed to save to learning log:", error);
+      }
+    }
+  }, [showSummary, analysis, conversationId, difficulty, summary]);
 
   const loadUserSettings = async () => {
     try {
@@ -82,137 +107,94 @@ export default function PracticePage() {
     router.push("/dashboard");
   };
 
-  // Summary Screen
+  // Summary Screen - Modal Style
   if (showSummary) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">
-        <div className="rounded-2xl border border-border bg-[#1e2433] p-8">
-          <div className="text-center mb-6">
-            <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-[#10b981]/10 border border-[#10b981]/30 flex items-center justify-center glow-green">
-              <Trophy className="h-8 w-8 text-[#10b981]" />
-            </div>
-            <h2 className="text-2xl font-bold text-foreground">Excellent Work!</h2>
-            <p className="mt-2 text-muted-foreground">
-              You've completed a Portuguese practice session
-            </p>
-          </div>
-
-          {/* Performance Summary */}
-          {summary && (
-            <div className="mb-6 rounded-lg bg-[#10b981]/10 border border-[#10b981]/30 p-4">
-              <h3 className="font-semibold text-[#10b981] mb-2 flex items-center gap-2">
-                <Trophy className="h-4 w-4" />
-                Performance Summary
-              </h3>
-              <p className="text-sm text-foreground whitespace-pre-wrap">{summary}</p>
-            </div>
-          )}
-
-          {/* Enhanced Analysis */}
-          {analysis && (
-            <div className="space-y-4 mb-6">
-              {/* Topics Discussed */}
-              {analysis.topicsDiscussed && analysis.topicsDiscussed.length > 0 && (
-                <div className="rounded-lg bg-[#00d9ff]/10 border border-[#00d9ff]/30 p-4">
-                  <h3 className="font-semibold text-[#00d9ff] mb-2 flex items-center gap-2">
-                    <Lightbulb className="h-4 w-4" />
-                    Topics Covered
-                  </h3>
-                  <div className="flex flex-wrap gap-2">
-                    {analysis.topicsDiscussed.map((topic: string, i: number) => (
-                      <span
-                        key={i}
-                        className="px-3 py-1 rounded-full bg-[#00d9ff]/20 text-[#00d9ff] text-sm"
-                      >
-                        {topic}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Grammar Points */}
-              {analysis.grammarPoints && analysis.grammarPoints.length > 0 && (
-                <div className="rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/30 p-4">
-                  <h3 className="font-semibold text-[#a855f7] mb-3">
-                    Grammar Practiced
-                  </h3>
-                  <div className="space-y-2">
-                    {analysis.grammarPoints.map((point: any, i: number) => (
-                      <div key={i}>
-                        <p className="text-sm font-medium text-foreground capitalize">
-                          {point.category}
-                        </p>
-                        <ul className="ml-4 text-xs text-muted-foreground">
-                          {point.examples.map((ex: string, j: number) => (
-                            <li key={j}>• {ex}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Vocabulary Learned */}
-              {analysis.vocabularyLearned && analysis.vocabularyLearned.length > 0 && (
-                <div className="rounded-lg bg-[#ec4899]/10 border border-[#ec4899]/30 p-4">
-                  <h3 className="font-semibold text-[#ec4899] mb-3">
-                    New Vocabulary ({analysis.vocabularyLearned.length} words)
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {analysis.vocabularyLearned.slice(0, 6).map((vocab: any, i: number) => (
-                      <div key={i} className="text-sm">
-                        <span className="font-medium text-foreground">{vocab.word}</span>
-                        <span className="text-muted-foreground"> - {vocab.translation}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {analysis.vocabularyLearned.length > 6 && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      + {analysis.vocabularyLearned.length - 6} more words saved to your vocabulary
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Recommended Next Steps */}
-              {analysis.recommendedNextSteps && analysis.recommendedNextSteps.length > 0 && (
-                <div className="rounded-lg bg-[#f97316]/10 border border-[#f97316]/30 p-4">
-                  <h3 className="font-semibold text-[#f97316] mb-2">
-                    What to Focus On Next
-                  </h3>
-                  <ul className="space-y-1 text-sm text-foreground">
-                    {analysis.recommendedNextSteps.map((step: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-[#f97316] mt-0.5">→</span>
-                        {step}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="space-y-3">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div className="w-full max-w-lg rounded-2xl border border-border bg-[#1e2433] overflow-hidden shadow-2xl">
+          {/* Modal Header - Green */}
+          <div className="bg-[#10b981] p-6 relative">
             <button
               onClick={finishSession}
-              className="w-full rounded-lg bg-gradient-to-r from-[#00d9ff] to-[#00b8d9] px-4 py-3 font-semibold text-[#0f1419] shadow-lg shadow-[#00d9ff]/30 hover:shadow-xl hover:shadow-[#00d9ff]/40 transition-all duration-300"
+              aria-label="Close session summary"
+              className="absolute top-4 right-4 h-8 w-8 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-colors"
             >
-              Back to Dashboard
+              <X className="h-5 w-5" />
             </button>
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
+                <Sparkles className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">Mandou bem!</h2>
+                <p className="text-white/80 text-sm">Session Summary</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Modal Content */}
+          <div className="p-6 space-y-6">
+            {/* Iwry's Feedback */}
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-4 w-4 text-[#fbbf24]" />
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  Iwry's Feedback
+                </h3>
+              </div>
+              <div className="rounded-lg bg-[#0f1419] border border-border p-4">
+                <p className="text-foreground text-sm leading-relaxed">
+                  "{summary || analysis?.performanceSummary || "Great effort today! Keep practicing to improve your fluency."}"
+                </p>
+              </div>
+            </div>
+
+            {/* Two Column Section */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* New Vocabulary */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle2 className="h-4 w-4 text-[#10b981]" />
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    New Vocabulary
+                  </h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {analysis?.vocabularyLearned?.slice(0, 5).map((vocab: any, i: number) => (
+                    <span
+                      key={i}
+                      className="px-3 py-1 rounded-full bg-[#10b981]/10 text-[#10b981] text-sm border border-[#10b981]/30"
+                    >
+                      {vocab.word}
+                    </span>
+                  ))}
+                  {(!analysis?.vocabularyLearned || analysis.vocabularyLearned.length === 0) && (
+                    <span className="text-sm text-muted-foreground">Keep practicing!</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Next Step */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <ArrowRight className="h-4 w-4 text-[#00d9ff]" />
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                    Next Step
+                  </h3>
+                </div>
+                <p className="text-sm text-foreground leading-relaxed">
+                  {analysis?.recommendedNextSteps?.[0] || "Continue practicing to build your vocabulary and improve fluency."}
+                </p>
+              </div>
+            </div>
+
+            {/* Go to Dashboard Button */}
             <button
-              onClick={() => {
-                setIsStarted(false);
-                setShowSummary(false);
-                setConversationId(null);
-                setAnalysis(null);
-                startConversation();
-              }}
-              className="w-full rounded-lg border border-border bg-[#1e2433] px-4 py-3 font-semibold text-foreground hover:border-[#00d9ff]/50 hover:bg-[#00d9ff]/10 transition-all duration-300"
+              onClick={finishSession}
+              className="w-full rounded-lg bg-[#0f1419] border border-border px-4 py-3 font-semibold text-foreground hover:border-[#10b981]/50 hover:bg-[#10b981]/10 transition-all flex items-center justify-center gap-2"
             >
-              Start Another Session
+              Go to Dashboard
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
