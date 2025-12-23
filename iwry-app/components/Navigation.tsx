@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Home, MessageCircle, AlertCircle, User, LogOut } from "lucide-react";
+import { Home, MessageCircle, AlertCircle, User, LogOut, CreditCard, BookOpen } from "lucide-react";
 
 export default function Navigation({ userName }: { userName?: string | null }) {
   const pathname = usePathname();
@@ -11,6 +11,8 @@ export default function Navigation({ userName }: { userName?: string | null }) {
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: Home },
     { href: "/practice", label: "Practice", icon: MessageCircle },
+    { href: "/flashcards", label: "Flashcards", icon: CreditCard },
+    { href: "/vocabulary", label: "Vocabulary", icon: BookOpen },
     { href: "/corrections", label: "Corrections", icon: AlertCircle },
     { href: "/profile", label: "Profile", icon: User },
   ];
@@ -103,13 +105,13 @@ export default function Navigation({ userName }: { userName?: string | null }) {
       </header>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-[#0f1419]/95 backdrop-blur-xl md:hidden">
-        <div className="grid grid-cols-4 gap-1 px-2 py-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-[#0f1419]/95 backdrop-blur-xl md:hidden overflow-x-auto">
+        <div className="flex gap-1 px-2 py-2 min-w-max">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 text-xs font-medium transition-all duration-300 ${
+              className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2 text-xs font-medium transition-all duration-300 min-w-[70px] ${
                 isActive(item.href)
                   ? "text-[#00d9ff] bg-[#00d9ff]/10"
                   : "text-muted-foreground"
@@ -118,7 +120,7 @@ export default function Navigation({ userName }: { userName?: string | null }) {
               <div className={`relative ${isActive(item.href) ? "glow-cyan-sm" : ""}`}>
                 <item.icon className={`h-5 w-5 ${isActive(item.href) ? "stroke-2" : ""}`} />
               </div>
-              <span>{item.label}</span>
+              <span className="whitespace-nowrap">{item.label}</span>
               {isActive(item.href) && (
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#00d9ff] rounded-full glow-cyan-sm" />
               )}

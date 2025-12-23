@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { formatDate } from "@/lib/utils";
 import {
   CheckCircle,
@@ -36,6 +37,7 @@ interface CorrectionsClientProps {
 export default function CorrectionsClient({
   initialCorrections,
 }: CorrectionsClientProps) {
+  const router = useRouter();
   const [corrections, setCorrections] = useState<Correction[]>(initialCorrections);
   const [filter, setFilter] = useState<string>("all");
 
@@ -79,37 +81,11 @@ export default function CorrectionsClient({
     other: "bg-[#64748b]/10 text-[#64748b] border-[#64748b]/30",
   };
 
-  const handlePracticeRoute = async (
-    correctionId: string,
-    practiceType: string
-  ) => {
-    try {
-      const response = await fetch("/api/corrections/practice-route", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          correctionId,
-          practiceType,
-          wasCorrect: false, // Will be updated based on actual practice
-        }),
-      });
-
-      if (response.ok) {
-        // Update local state
-        setCorrections((prev) =>
-          prev.map((c) =>
-            c.id === correctionId
-              ? { ...c, times_practiced: (c.times_practiced || 0) + 1 }
-              : c
-          )
-        );
-
-        // Show feedback
-        alert(`Routed to ${practiceType} practice!`);
-      }
-    } catch (error) {
-      console.error("Failed to route practice:", error);
-      alert("Failed to route practice. Please try again.");
+  const handlePracticeRoute = (practiceType: string) => {
+    if (practiceType === "flashcard") {
+      router.push("/flashcards");
+    } else if (practiceType === "conversation") {
+      router.push("/practice");
     }
   };
 
@@ -307,24 +283,14 @@ export default function CorrectionsClient({
                             {correction.mastery_status !== "mastered" && (
                               <div className="flex flex-wrap gap-2">
                                 <button
-                                  onClick={() =>
-                                    handlePracticeRoute(
-                                      correction.id,
-                                      "flashcard"
-                                    )
-                                  }
+                                  onClick={() => handlePracticeRoute("flashcard")}
                                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/30 text-[#a855f7] text-xs font-medium hover:bg-[#a855f7]/20 transition-all"
                                 >
                                   <CreditCard className="h-3 w-3" />
                                   Flashcard
                                 </button>
                                 <button
-                                  onClick={() =>
-                                    handlePracticeRoute(
-                                      correction.id,
-                                      "conversation"
-                                    )
-                                  }
+                                  onClick={() => handlePracticeRoute("conversation")}
                                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#00d9ff]/10 border border-[#00d9ff]/30 text-[#00d9ff] text-xs font-medium hover:bg-[#00d9ff]/20 transition-all"
                                 >
                                   <MessageSquare className="h-3 w-3" />
