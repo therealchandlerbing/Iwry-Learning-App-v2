@@ -278,11 +278,11 @@ export async function sendMessage(
   } catch (error) {
     console.error("Gemini API error:", error);
 
-    // Re-throw with more context
+    // Re-throw with more context while preserving the original error stack trace
     if (error instanceof Error) {
-      throw new Error(`Gemini API failed: ${error.message}`);
+      throw new Error(`Gemini API failed: ${error.message}`, { cause: error });
     }
-    throw new Error("Gemini API failed with unknown error");
+    throw new Error("Gemini API failed with unknown error", { cause: error });
   }
 }
 
