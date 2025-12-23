@@ -201,8 +201,8 @@ const AI_MODELS = {
   LESSONS: "gemini-3-pro-preview", // Gemini 3 Pro Preview - Best for deep reasoning and lesson generation
   // Dictionary Lookup - Instant, accurate translations
   DICTIONARY: "gemini-3-flash-preview", // Gemini 3 Flash Preview - Instant lookups
-  // Real-Time Voice - Native audio model optimized for live voice streaming (Latest: December 2025)
-  VOICE: "gemini-2.5-flash-native-audio-preview-12-2025", // Gemini 2.5 Flash Live with native audio
+  // Real-Time Voice - Native audio model optimized for live voice streaming (Latest: September 2025)
+  VOICE: "gemini-2.5-flash-native-audio-preview-09-2025", // Gemini 2.5 Flash Live with native audio
   // Text-to-Speech - Natural Brazilian Portuguese voice (Latest: December 2025)
   TTS: "gemini-2.5-flash-preview-tts" // Gemini 2.5 Flash TTS for natural speech
 } as const;
