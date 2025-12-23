@@ -3,17 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Home, MessageCircle, AlertCircle, User, LogOut, CreditCard, BookOpen } from "lucide-react";
+import { Home, MessageCircle, AlertCircle, User, LogOut, CreditCard, BookOpen, Search, FileText } from "lucide-react";
 
 export default function Navigation({ userName }: { userName?: string | null }) {
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/dashboard", label: "Dashboard", icon: Home },
-    { href: "/practice", label: "Practice", icon: MessageCircle },
-    { href: "/flashcards", label: "Flashcards", icon: CreditCard },
-    { href: "/vocabulary", label: "Vocabulary", icon: BookOpen },
-    { href: "/corrections", label: "Corrections", icon: AlertCircle },
+    { href: "/dashboard", label: "Home", icon: Home },
+    { href: "/practice", label: "Chat", icon: MessageCircle },
+    { href: "/dictionary", label: "Dictionary", icon: Search },
+    { href: "/lessons", label: "Lessons", icon: BookOpen },
+    { href: "/learning-log", label: "Log", icon: FileText },
     { href: "/profile", label: "Profile", icon: User },
   ];
 
@@ -32,13 +32,13 @@ export default function Navigation({ userName }: { userName?: string | null }) {
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center gap-3 group">
               <div className="relative">
-                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#00d9ff] to-[#a855f7] flex items-center justify-center text-white font-bold text-sm glow-cyan-sm group-hover:glow-cyan transition-all duration-300">
-                  I
+                <div className="h-9 w-9 rounded-xl bg-[#10b981] flex items-center justify-center text-white font-bold text-sm group-hover:shadow-lg group-hover:shadow-[#10b981]/30 transition-all duration-300">
+                  F
                 </div>
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-bold text-foreground">Iwry</span>
-                <span className="text-[10px] text-muted-foreground -mt-1">Fala Conmigo</span>
+                <span className="text-lg font-bold text-foreground">Fala Comigo</span>
+                <span className="text-[10px] text-muted-foreground -mt-1 uppercase tracking-wider">Portuguese Companion</span>
               </div>
             </Link>
 
@@ -87,12 +87,12 @@ export default function Navigation({ userName }: { userName?: string | null }) {
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#00d9ff] to-[#a855f7] flex items-center justify-center text-white font-bold text-sm glow-cyan-sm">
-                I
+              <div className="h-8 w-8 rounded-lg bg-[#10b981] flex items-center justify-center text-white font-bold text-sm">
+                F
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-bold text-foreground">Iwry</span>
-                <span className="text-[10px] text-muted-foreground -mt-1">Fala Conmigo</span>
+                <span className="text-lg font-bold text-foreground">Fala Comigo</span>
+                <span className="text-[10px] text-muted-foreground -mt-1 uppercase tracking-wider">Portuguese Companion</span>
               </div>
             </Link>
             <div className="flex items-center gap-2">
