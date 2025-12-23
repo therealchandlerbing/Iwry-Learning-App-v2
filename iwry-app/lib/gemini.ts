@@ -1,9 +1,10 @@
 import { GoogleGenerativeAI, SchemaType, FunctionDeclaration } from "@google/generative-ai";
 import { DifficultyLevel, PortugueseAccent, Correction } from "@/types";
 
-const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+// Support both env var names for smooth transition (v1 uses GEMINI_API_KEY, v2 originally used GOOGLE_GENERATIVE_AI_API_KEY)
+const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 if (!apiKey) {
-  throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not set");
+  throw new Error("GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY is not set. Get your key from: https://aistudio.google.com/apikey");
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
@@ -63,15 +64,17 @@ ${accentInfo}
 - Provide the corrected version
 - Categorize errors (verb tenses, gender agreement, prepositions, pronouns, article usage, word order)
 
-**Response format:**
-- Write Portuguese text in **bold** using markdown
-- Write English translations in *italics* using markdown
-- Include a 💡 Fluency Tip with cultural insights after most responses
+**Response format (CRITICAL - MUST FOLLOW):**
+- PRIMARY PORTUGUESE: Every Portuguese sentence or phrase MUST be wrapped in double asterisks for bolding (e.g., **Tudo bem?**)
+- TRANSLATIONS: Every English translation MUST be in parentheses AND italics (e.g., *(How are you?)*)
+- SPACING: Use double line breaks (\\n\\n) between distinct points or sentences for readability (Note: \\n is intentionally escaped so AI sees literal \n as instruction)
+- FLUENCY TIP: Always add a "💡 Fluency Tip" at the end as a separate line with cultural insights
 - Keep responses 2-3 sentences maximum
 - Ask follow-up questions to keep conversation going
+- CRITICAL FOR BEGINNERS: Always translate Portuguese to English in parentheses
 
 Example:
-**Olá! Como você está?** *Hello! How are you?*
+**Olá! Como você está?** *(Hello! How are you?)*
 
 💡 Fluency Tip: Brazilians often use "tudo bem?" as a casual greeting!
 
@@ -82,7 +85,7 @@ When you detect a mistake in the user's Portuguese, note it mentally but continu
 ${accentInfo}
 
 **Communication style:**
-- Use common abbreviations: vc (você), tbm (também), blz (beleza), td bem (tudo bem)
+- Use common abbreviations: vc (você), tb (também), blz (beleza), td bem (tudo bem)
 - Mix formal and informal language appropriately
 - Use Brazilian slang naturally
 - Topics: work, culture, travel, current events, sports, entertainment
@@ -93,16 +96,19 @@ ${accentInfo}
 - Provide explanations when asked
 - Categorize errors for tracking
 
-**Response format:**
-- Write Portuguese text in **bold** using markdown
-- Write English translations in *italics* using markdown
-- Include a 💡 Fluency Tip with cultural insights or slang explanations when helpful
+**Response format (CRITICAL - MUST FOLLOW):**
+- PRIMARY PORTUGUESE: Every Portuguese sentence or phrase MUST be wrapped in double asterisks for bolding (e.g., **E aí, cara!**)
+- TRANSLATIONS: Every English translation MUST be in parentheses AND italics (e.g., *(Hey, dude!)*)
+- SPACING: Use double line breaks (\\n\\n) between distinct points for readability
+- ABBREVIATIONS: Use WhatsApp-style abbreviations: "vc" (você), "tb" (também), "pq" (porque), "blz" (beleza), "fds" (fim de semana)
+- SLANG: Use natural Brazilian text laughter ("kkk", "rsrs")
+- FLUENCY TIP: Always add a "💡 Fluency Tip" with cultural insights or slang explanations
 - Natural conversational flow, 2-4 sentences
 - Use emojis occasionally (🙂 😊 ✌️)
 - Ask engaging questions
 
 Example:
-**E aí, cara! Tudo na paz?** *Hey, dude! Everything cool?*
+**E aí, cara! Tudo na paz?** *(Hey, dude! Everything cool?)*
 
 💡 Fluency Tip: "Cara" is Brazilian slang like "dude" in English!`,
 
@@ -122,16 +128,17 @@ ${accentInfo}
 - Provide nuanced explanations
 - Focus on advanced grammar (subjunctive, conditionals, idiomatic expressions)
 
-**Response format:**
-- Write Portuguese text in **bold** using markdown
-- Write English translations in *italics* using markdown
-- Include a 💡 Fluency Tip with advanced cultural nuances or business etiquette when relevant
+**Response format (CRITICAL - MUST FOLLOW):**
+- PRIMARY PORTUGUESE: Every Portuguese sentence or phrase MUST be wrapped in double asterisks for bolding
+- TRANSLATIONS: Every English translation MUST be in parentheses AND italics
+- SPACING: Use double line breaks (\\n\\n) between distinct points for readability
+- FLUENCY TIP: Always add a "💡 Fluency Tip" with advanced cultural nuances or business etiquette
 - Sophisticated, natural responses (3-5 sentences)
 - Challenge the user with advanced vocabulary
 - Discuss abstract concepts
 
 Example:
-**Precisamos alinhar as expectativas antes da reunião.** *We need to align expectations before the meeting.*
+**Precisamos alinhar as expectativas antes da reunião.** *(We need to align expectations before the meeting.)*
 
 💡 Fluency Tip: "Alinhar" is commonly used in Brazilian business for getting everyone on the same page!`
   };
@@ -186,18 +193,18 @@ export interface GeminiChatOptions {
   conversationHistory?: Array<{ role: string; parts: Array<{ text: string }> }>;
 }
 
-// AI Models Configuration (v1 Architecture)
+// AI Models Configuration (Aligned with v1 Working Implementation)
 const AI_MODELS = {
-  // Chat Conversations - Fast responses, great for dialogue
-  CHAT: "gemini-2.0-flash-exp", // Gemini 3 Flash Preview equivalent
-  // Custom Lessons - Deep reasoning for curriculum design
-  LESSONS: "gemini-1.5-pro-latest", // Gemini 3 Pro Preview equivalent
+  // Chat Conversations - Fast responses, great for dialogue (v1: gemini-2.5-flash)
+  CHAT: "gemini-2.0-flash-exp", // Using 2.0 as 2.5 may not be available yet
+  // Custom Lessons - Deep reasoning for curriculum design (v1: gemini-2.5-pro)
+  LESSONS: "gemini-1.5-pro-latest", // Using 1.5 as 2.5 may not be available yet
   // Dictionary Lookup - Instant, accurate translations
-  DICTIONARY: "gemini-2.0-flash-exp", // Gemini 3 Flash Preview equivalent
+  DICTIONARY: "gemini-2.0-flash-exp",
   // Real-Time Voice - Optimized for live voice streaming
-  VOICE: "gemini-2.0-flash-exp", // Gemini 2.5 Flash Native Audio equivalent
-  // Text-to-Speech - Natural Brazilian Portuguese voice
-  TTS: "gemini-2.0-flash-exp" // Gemini 2.5 Flash TTS equivalent
+  VOICE: "gemini-2.0-flash-exp",
+  // Text-to-Speech - Natural Brazilian Portuguese voice (v1: gemini-2.5-flash-preview-tts)
+  TTS: "gemini-2.0-flash-exp"
 } as const;
 
 export async function sendMessage(
@@ -216,15 +223,20 @@ export async function sendMessage(
     history: options.conversationHistory || []
   });
 
-  const result = await chat.sendMessage(userMessage);
-  const response = result.response;
+  try {
+    const result = await chat.sendMessage(userMessage);
+    const response = result.response;
 
-  // Extract text response
-  let textResponse = "";
-  const corrections: Partial<Correction>[] = [];
+    if (!response) {
+      throw new Error("No response received from Gemini API");
+    }
 
-  // Process all parts of the response
-  for (const part of response.candidates?.[0]?.content?.parts || []) {
+    // Extract text response
+    let textResponse = "";
+    const corrections: Partial<Correction>[] = [];
+
+    // Process all parts of the response
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
     if ('text' in part && part.text) {
       textResponse += part.text;
     }
@@ -254,10 +266,25 @@ export async function sendMessage(
     }
   }
 
-  return {
-    response: textResponse,
-    corrections: corrections as Correction[]
-  };
+    // Ensure we have a response
+    if (!textResponse || textResponse.trim() === "") {
+      // Fallback to a friendly error message in Portuguese
+      textResponse = "Desculpe, houve um problema. Pode repetir? (Sorry, there was a problem. Can you repeat?)";
+    }
+
+    return {
+      response: textResponse,
+      corrections: corrections as Correction[]
+    };
+  } catch (error) {
+    console.error("Gemini API error:", error);
+
+    // Re-throw with more context while preserving the original error stack trace
+    if (error instanceof Error) {
+      throw new Error(`Gemini API failed: ${error.message}`, { cause: error });
+    }
+    throw new Error("Gemini API failed with unknown error", { cause: error });
+  }
 }
 
 // Dictionary Definition Interface (v1 Architecture - Structured Output)
