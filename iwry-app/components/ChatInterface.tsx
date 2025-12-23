@@ -46,6 +46,9 @@ export default function ChatInterface({
     isSupported: isTTSSupported,
   } = useTextToSpeech();
 
+  // ====== useCallback Definitions ======
+  // Define all callbacks before useEffect hooks to avoid temporal dead zone errors
+
   // Auto-scroll to bottom
   const scrollToBottom = useCallback(() => {
     // Ensure the ref is attached to a valid DOM node before scrolling
@@ -58,73 +61,6 @@ export default function ChatInterface({
       }
     }
   }, []);
-
-  useEffect(() => {
-    // Use requestAnimationFrame to ensure DOM is ready
-    const scrollFrameId = requestAnimationFrame(() => {
-      scrollToBottom();
-    });
-
-    return () => {
-      cancelAnimationFrame(scrollFrameId);
-    };
-  }, [messages, scrollToBottom]);
-
-  // Auto-resize textarea (client-side only)
-  useEffect(() => {
-    // Ensure we're on the client side and the element exists
-    if (typeof window === 'undefined') return;
-
-    const textarea = inputRef.current;
-    if (!textarea || !(textarea instanceof HTMLTextAreaElement)) return;
-
-    // Use requestAnimationFrame to ensure DOM is ready for measurement
-    const frameId = requestAnimationFrame(() => {
-      try {
-        textarea.style.height = 'auto';
-        textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
-      } catch (error) {
-        // Gracefully handle any errors during height adjustment
-        console.error('Error adjusting textarea height:', error);
-      }
-    });
-
-    return () => {
-      cancelAnimationFrame(frameId);
-    };
-  }, [input]);
-
-  // Send first AI message
-  useEffect(() => {
-    if (messages.length === 0) {
-      sendAIGreeting();
-    }
-  }, [messages.length, sendAIGreeting]);
-
-  // Handle voice transcript
-  useEffect(() => {
-    if (voiceStatus === "processing" && transcript) {
-      // User finished speaking, send the transcript
-      setInput(transcript);
-      // Auto-submit the message
-      setTimeout(() => {
-        if (transcript) {
-          handleVoiceMessage(transcript);
-        }
-      }, 500);
-    }
-  }, [voiceStatus, transcript, handleVoiceMessage]);
-
-  // Auto-speak AI responses in voice mode
-  useEffect(() => {
-    if (voiceMode && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === "assistant" && !isSpeaking) {
-        // Speak the AI's response
-        speak(lastMessage.content);
-      }
-    }
-  }, [messages, voiceMode, speak, isSpeaking]);
 
   const sendAIGreeting = useCallback(async () => {
     setIsLoading(true);
@@ -206,17 +142,88 @@ export default function ChatInterface({
     }
   }, [conversationId, difficulty, accent, messages, isLoading]);
 
+  const handleVoiceMessage = useCallback(async (message: string) => {
+    resetTranscript();
+    await sendMessageInternal(message);
+  }, [resetTranscript, sendMessageInternal]);
+
+  // ====== useEffect Hooks ======
+
+  useEffect(() => {
+    // Use requestAnimationFrame to ensure DOM is ready
+    const scrollFrameId = requestAnimationFrame(() => {
+      scrollToBottom();
+    });
+
+    return () => {
+      cancelAnimationFrame(scrollFrameId);
+    };
+  }, [messages, scrollToBottom]);
+
+  // Auto-resize textarea (client-side only)
+  useEffect(() => {
+    // Ensure we're on the client side and the element exists
+    if (typeof window === 'undefined') return;
+
+    const textarea = inputRef.current;
+    if (!textarea || !(textarea instanceof HTMLTextAreaElement)) return;
+
+    // Use requestAnimationFrame to ensure DOM is ready for measurement
+    const frameId = requestAnimationFrame(() => {
+      try {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+      } catch (error) {
+        // Gracefully handle any errors during height adjustment
+        console.error('Error adjusting textarea height:', error);
+      }
+    });
+
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, [input]);
+
+  // Send first AI message
+  useEffect(() => {
+    if (messages.length === 0) {
+      sendAIGreeting();
+    }
+  }, [messages.length, sendAIGreeting]);
+
+  // Handle voice transcript
+  useEffect(() => {
+    if (voiceStatus === "processing" && transcript) {
+      // User finished speaking, send the transcript
+      setInput(transcript);
+      // Auto-submit the message
+      setTimeout(() => {
+        if (transcript) {
+          handleVoiceMessage(transcript);
+        }
+      }, 500);
+    }
+  }, [voiceStatus, transcript, handleVoiceMessage]);
+
+  // Auto-speak AI responses in voice mode
+  useEffect(() => {
+    if (voiceMode && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === "assistant" && !isSpeaking) {
+        // Speak the AI's response
+        speak(lastMessage.content);
+      }
+    }
+  }, [messages, voiceMode, speak, isSpeaking]);
+
+  // ====== Event Handlers ======
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     await sendMessageInternal(input);
     setInput("");
     inputRef.current?.focus();
   };
-
-  const handleVoiceMessage = useCallback(async (message: string) => {
-    resetTranscript();
-    await sendMessageInternal(message);
-  }, [resetTranscript, sendMessageInternal]);
 
   const handleVoiceToggle = () => {
     if (voiceStatus === "listening") {
