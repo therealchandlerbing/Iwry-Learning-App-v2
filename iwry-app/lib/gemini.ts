@@ -193,18 +193,18 @@ export interface GeminiChatOptions {
   conversationHistory?: Array<{ role: string; parts: Array<{ text: string }> }>;
 }
 
-// AI Models Configuration (Production-Ready Gemini 2.5 Models)
+// AI Models Configuration (Production-Ready - Gemini 3 & 2.5 Models)
 const AI_MODELS = {
-  // Chat Conversations - Fast responses, great for dialogue
-  CHAT: "gemini-2.5-flash", // Stable 2.5 Flash for chat conversations
-  // Custom Lessons - Deep reasoning for curriculum design
-  LESSONS: "gemini-2.5-pro", // Stable 2.5 Pro for deeper reasoning and lesson generation
+  // Chat Conversations - Frontier intelligence with superior speed (Latest: December 2025)
+  CHAT: "gemini-3-flash-preview", // Gemini 3 Flash Preview - Fast responses, great for dialogue
+  // Custom Lessons - Deep reasoning for curriculum design (Latest: November 2025)
+  LESSONS: "gemini-3-pro-preview", // Gemini 3 Pro Preview - Best for deep reasoning and lesson generation
   // Dictionary Lookup - Instant, accurate translations
-  DICTIONARY: "gemini-2.5-flash", // Fast lookups with 2.5 Flash
-  // Real-Time Voice - Optimized for live voice streaming with native audio
-  VOICE: "gemini-2.5-flash", // 2.5 Flash for voice processing
-  // Text-to-Speech - Natural Brazilian Portuguese voice
-  TTS: "gemini-2.5-flash" // 2.5 Flash with TTS capabilities
+  DICTIONARY: "gemini-3-flash-preview", // Gemini 3 Flash Preview - Instant lookups
+  // Real-Time Voice - Native audio model optimized for live voice streaming (Latest: December 2025)
+  VOICE: "gemini-2.5-flash-native-audio-preview-12-2025", // Gemini 2.5 Flash Live with native audio
+  // Text-to-Speech - Natural Brazilian Portuguese voice (Latest: December 2025)
+  TTS: "gemini-2.5-flash-preview-tts" // Gemini 2.5 Flash TTS for natural speech
 } as const;
 
 export async function sendMessage(
