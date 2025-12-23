@@ -2,6 +2,21 @@ import { auth } from "@/lib/auth";
 import { sql } from "@vercel/postgres";
 import { analyzeSession } from "@/lib/gemini";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+// Zod schemas for runtime type validation (v1 Architecture - Type Safety)
+const MessageSchema = z.object({
+  role: z.string(),
+  content: z.string(),
+  created_at: z.date().optional(),
+});
+
+const CorrectionSchema = z.object({
+  mistake: z.string(),
+  correction: z.string(),
+  explanation: z.string(),
+  grammar_category: z.string(),
+});
 
 /**
  * Session Analysis API - v1 Architecture
@@ -41,17 +56,24 @@ export async function POST(request: NextRequest) {
       WHERE conversation_id = ${conversationId}
     `;
 
-    const messages = messagesResult.rows.map((row) => ({
-      role: row.role as string,
-      content: row.content as string,
-    }));
+    // Validate database results with Zod for type safety
+    const messages = messagesResult.rows.map((row) => {
+      const validated = MessageSchema.parse(row);
+      return {
+        role: validated.role,
+        content: validated.content,
+      };
+    });
 
-    const corrections = correctionsResult.rows.map((row) => ({
-      mistake: row.mistake as string,
-      correction: row.correction as string,
-      explanation: row.explanation as string,
-      grammarCategory: row.grammar_category as string,
-    }));
+    const corrections = correctionsResult.rows.map((row) => {
+      const validated = CorrectionSchema.parse(row);
+      return {
+        mistake: validated.mistake,
+        correction: validated.correction,
+        explanation: validated.explanation,
+        grammarCategory: validated.grammar_category,
+      };
+    });
 
     // Analyze session with structured output
     const analysis = await analyzeSession(messages, corrections);

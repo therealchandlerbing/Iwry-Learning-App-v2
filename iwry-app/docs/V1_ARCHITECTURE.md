@@ -1,6 +1,6 @@
-# Iwry v2 - v1 Architecture Implementation
+# Iwry v1 Architecture Implementation
 
-This document describes the v1 architecture implementation for Iwry, including the data flow, AI model selection, and all integrated features.
+This document describes the comprehensive v1 architecture for the Iwry Portuguese language learning application, including data flow, AI model selection, and all integrated features.
 
 ## 📊 Data Flow Diagram
 
@@ -445,6 +445,6 @@ For questions about the v1 architecture implementation, refer to:
 
 ---
 
-**Version:** 2.0 (v1 Architecture Alignment)
+**Architecture Version:** v1
 **Last Updated:** December 2024
 **Maintained by:** Iwry Development Team

@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { generateQuiz } from "@/lib/gemini";
-import { DifficultyLevel } from "@/types";
+import { VALID_DIFFICULTY_LEVELS } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -26,8 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const validDifficulties: DifficultyLevel[] = ["beginner", "intermediate", "advanced"];
-    if (!difficulty || !validDifficulties.includes(difficulty)) {
+    if (!difficulty || !VALID_DIFFICULTY_LEVELS.includes(difficulty)) {
       return NextResponse.json(
         { error: "Valid difficulty level is required (beginner, intermediate, advanced)" },
         { status: 400 }

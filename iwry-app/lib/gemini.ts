@@ -443,7 +443,59 @@ export async function generateCustomLesson(
   const model = genAI.getGenerativeModel({
     model: AI_MODELS.LESSONS, // Using Pro model for curriculum design
     generationConfig: {
-      responseMimeType: "application/json"
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          title: { type: SchemaType.STRING },
+          description: { type: SchemaType.STRING },
+          difficulty: { type: SchemaType.STRING },
+          estimatedMinutes: { type: SchemaType.NUMBER },
+          objectives: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING }
+          },
+          sections: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                heading: { type: SchemaType.STRING },
+                content: { type: SchemaType.STRING },
+                examples: {
+                  type: SchemaType.ARRAY,
+                  items: {
+                    type: SchemaType.OBJECT,
+                    properties: {
+                      portuguese: { type: SchemaType.STRING },
+                      english: { type: SchemaType.STRING }
+                    },
+                    required: ["portuguese", "english"]
+                  }
+                }
+              },
+              required: ["heading", "content", "examples"]
+            }
+          },
+          practiceExercises: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING }
+          },
+          vocabulary: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                word: { type: SchemaType.STRING },
+                translation: { type: SchemaType.STRING },
+                context: { type: SchemaType.STRING }
+              },
+              required: ["word", "translation", "context"]
+            }
+          }
+        },
+        required: ["title", "description", "difficulty", "estimatedMinutes", "objectives", "sections", "practiceExercises", "vocabulary"]
+      }
     }
   });
 
@@ -495,7 +547,49 @@ export async function analyzeSession(
   const model = genAI.getGenerativeModel({
     model: AI_MODELS.CHAT,
     generationConfig: {
-      responseMimeType: "application/json"
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: SchemaType.OBJECT,
+        properties: {
+          duration: { type: SchemaType.NUMBER },
+          topicsDiscussed: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING }
+          },
+          vocabularyLearned: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                word: { type: SchemaType.STRING },
+                translation: { type: SchemaType.STRING },
+                context: { type: SchemaType.STRING }
+              },
+              required: ["word", "translation", "context"]
+            }
+          },
+          grammarPoints: {
+            type: SchemaType.ARRAY,
+            items: {
+              type: SchemaType.OBJECT,
+              properties: {
+                category: { type: SchemaType.STRING },
+                examples: {
+                  type: SchemaType.ARRAY,
+                  items: { type: SchemaType.STRING }
+                }
+              },
+              required: ["category", "examples"]
+            }
+          },
+          performanceSummary: { type: SchemaType.STRING },
+          recommendedNextSteps: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING }
+          }
+        },
+        required: ["duration", "topicsDiscussed", "vocabularyLearned", "grammarPoints", "performanceSummary", "recommendedNextSteps"]
+      }
     }
   });
 
