@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, X, Mic, Languages, MicOff, Volume2 } from "lucide-react";
 import { ChatMessage } from "@/types";
 import { formatTime } from "@/lib/utils";
@@ -47,7 +47,7 @@ export default function ChatInterface({
   } = useTextToSpeech();
 
   // Auto-scroll to bottom
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     // Ensure the ref is attached to a valid DOM node before scrolling
     if (messagesEndRef.current && messagesEndRef.current instanceof HTMLElement) {
       try {
@@ -57,18 +57,18 @@ export default function ChatInterface({
         console.error('Error scrolling to bottom:', error);
       }
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Use requestAnimationFrame to ensure DOM is ready
-    const scrollTimeout = requestAnimationFrame(() => {
+    const scrollFrameId = requestAnimationFrame(() => {
       scrollToBottom();
     });
 
     return () => {
-      cancelAnimationFrame(scrollTimeout);
+      cancelAnimationFrame(scrollFrameId);
     };
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   // Auto-resize textarea (client-side only)
   useEffect(() => {
@@ -99,8 +99,7 @@ export default function ChatInterface({
     if (messages.length === 0) {
       sendAIGreeting();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [messages.length, sendAIGreeting]);
 
   // Handle voice transcript
   useEffect(() => {
@@ -114,7 +113,7 @@ export default function ChatInterface({
         }
       }, 500);
     }
-  }, [voiceStatus, transcript]);
+  }, [voiceStatus, transcript, handleVoiceMessage]);
 
   // Auto-speak AI responses in voice mode
   useEffect(() => {
@@ -125,9 +124,9 @@ export default function ChatInterface({
         speak(lastMessage.content);
       }
     }
-  }, [messages, voiceMode]);
+  }, [messages, voiceMode, speak, isSpeaking]);
 
-  const sendAIGreeting = async () => {
+  const sendAIGreeting = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch("/api/chat/greeting", {
@@ -150,10 +149,10 @@ export default function ChatInterface({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [conversationId, difficulty, accent]);
 
   // Unified message sending function (used by both text and voice input)
-  const sendMessageInternal = async (messageContent: string) => {
+  const sendMessageInternal = useCallback(async (messageContent: string) => {
     if (!messageContent.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
@@ -205,7 +204,7 @@ export default function ChatInterface({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [conversationId, difficulty, accent, messages, isLoading]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,10 +213,10 @@ export default function ChatInterface({
     inputRef.current?.focus();
   };
 
-  const handleVoiceMessage = async (message: string) => {
+  const handleVoiceMessage = useCallback(async (message: string) => {
     resetTranscript();
     await sendMessageInternal(message);
-  };
+  }, [resetTranscript, sendMessageInternal]);
 
   const handleVoiceToggle = () => {
     if (voiceStatus === "listening") {
