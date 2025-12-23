@@ -63,15 +63,17 @@ ${accentInfo}
 - Provide the corrected version
 - Categorize errors (verb tenses, gender agreement, prepositions, pronouns, article usage, word order)
 
-**Response format:**
-- Portuguese text can optionally use **bold** markdown for emphasis
-- English translations can optionally use *italics* for clarity
-- Optionally include a 💡 Fluency Tip with cultural insights
+**Response format (CRITICAL - MUST FOLLOW):**
+- PRIMARY PORTUGUESE: Every Portuguese sentence or phrase MUST be wrapped in double asterisks for bolding (e.g., **Tudo bem?**)
+- TRANSLATIONS: Every English translation MUST be in parentheses AND italics (e.g., *(How are you?)*)
+- SPACING: Use double line breaks (\\n\\n) between distinct points or sentences for readability
+- FLUENCY TIP: Always add a "💡 Fluency Tip" at the end as a separate line with cultural insights
 - Keep responses 2-3 sentences maximum
 - Ask follow-up questions to keep conversation going
+- CRITICAL FOR BEGINNERS: Always translate Portuguese to English in parentheses
 
 Example:
-**Olá! Como você está?** *Hello! How are you?*
+**Olá! Como você está?** *(Hello! How are you?)*
 
 💡 Fluency Tip: Brazilians often use "tudo bem?" as a casual greeting!
 
@@ -93,16 +95,19 @@ ${accentInfo}
 - Provide explanations when asked
 - Categorize errors for tracking
 
-**Response format:**
-- Portuguese text can optionally use **bold** markdown for emphasis
-- English translations can optionally use *italics* for clarity
-- Optionally include a 💡 Fluency Tip with cultural insights or slang explanations
+**Response format (CRITICAL - MUST FOLLOW):**
+- PRIMARY PORTUGUESE: Every Portuguese sentence or phrase MUST be wrapped in double asterisks for bolding (e.g., **E aí, cara!**)
+- TRANSLATIONS: Every English translation MUST be in parentheses AND italics (e.g., *(Hey, dude!)*)
+- SPACING: Use double line breaks (\\n\\n) between distinct points for readability
+- ABBREVIATIONS: Use WhatsApp-style abbreviations: "vc" (você), "tb" (também), "pq" (porque), "blz" (beleza), "fds" (fim de semana)
+- SLANG: Use natural Brazilian text laughter ("kkk", "rsrs")
+- FLUENCY TIP: Always add a "💡 Fluency Tip" with cultural insights or slang explanations
 - Natural conversational flow, 2-4 sentences
 - Use emojis occasionally (🙂 😊 ✌️)
 - Ask engaging questions
 
 Example:
-**E aí, cara! Tudo na paz?** *Hey, dude! Everything cool?*
+**E aí, cara! Tudo na paz?** *(Hey, dude! Everything cool?)*
 
 💡 Fluency Tip: "Cara" is Brazilian slang like "dude" in English!`,
 
@@ -122,16 +127,17 @@ ${accentInfo}
 - Provide nuanced explanations
 - Focus on advanced grammar (subjunctive, conditionals, idiomatic expressions)
 
-**Response format:**
-- Portuguese text can optionally use **bold** markdown for emphasis
-- English translations can optionally use *italics* for clarity
-- Optionally include a 💡 Fluency Tip with advanced cultural nuances or business etiquette
+**Response format (CRITICAL - MUST FOLLOW):**
+- PRIMARY PORTUGUESE: Every Portuguese sentence or phrase MUST be wrapped in double asterisks for bolding
+- TRANSLATIONS: Every English translation MUST be in parentheses AND italics
+- SPACING: Use double line breaks (\\n\\n) between distinct points for readability
+- FLUENCY TIP: Always add a "💡 Fluency Tip" with advanced cultural nuances or business etiquette
 - Sophisticated, natural responses (3-5 sentences)
 - Challenge the user with advanced vocabulary
 - Discuss abstract concepts
 
 Example:
-**Precisamos alinhar as expectativas antes da reunião.** *We need to align expectations before the meeting.*
+**Precisamos alinhar as expectativas antes da reunião.** *(We need to align expectations before the meeting.)*
 
 💡 Fluency Tip: "Alinhar" is commonly used in Brazilian business for getting everyone on the same page!`
   };
@@ -186,18 +192,18 @@ export interface GeminiChatOptions {
   conversationHistory?: Array<{ role: string; parts: Array<{ text: string }> }>;
 }
 
-// AI Models Configuration (v1 Architecture)
+// AI Models Configuration (Aligned with v1 Working Implementation)
 const AI_MODELS = {
-  // Chat Conversations - Fast responses, great for dialogue
-  CHAT: "gemini-2.0-flash-exp", // Gemini 3 Flash Preview equivalent
-  // Custom Lessons - Deep reasoning for curriculum design
-  LESSONS: "gemini-1.5-pro-latest", // Gemini 3 Pro Preview equivalent
+  // Chat Conversations - Fast responses, great for dialogue (v1: gemini-2.5-flash)
+  CHAT: "gemini-2.0-flash-exp", // Using 2.0 as 2.5 may not be available yet
+  // Custom Lessons - Deep reasoning for curriculum design (v1: gemini-2.5-pro)
+  LESSONS: "gemini-1.5-pro-latest", // Using 1.5 as 2.5 may not be available yet
   // Dictionary Lookup - Instant, accurate translations
-  DICTIONARY: "gemini-2.0-flash-exp", // Gemini 3 Flash Preview equivalent
+  DICTIONARY: "gemini-2.0-flash-exp",
   // Real-Time Voice - Optimized for live voice streaming
-  VOICE: "gemini-2.0-flash-exp", // Gemini 2.5 Flash Native Audio equivalent
-  // Text-to-Speech - Natural Brazilian Portuguese voice
-  TTS: "gemini-2.0-flash-exp" // Gemini 2.5 Flash TTS equivalent
+  VOICE: "gemini-2.0-flash-exp",
+  // Text-to-Speech - Natural Brazilian Portuguese voice (v1: gemini-2.5-flash-preview-tts)
+  TTS: "gemini-2.0-flash-exp"
 } as const;
 
 export async function sendMessage(
