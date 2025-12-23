@@ -42,17 +42,13 @@ export default function ChatInterface({
     const textarea = inputRef.current;
     if (!textarea || !(textarea instanceof HTMLTextAreaElement)) return;
 
-    const adjustHeight = () => {
-      try {
-        textarea.style.height = 'auto';
-        textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
-      } catch (error) {
-        // Gracefully handle any errors during height adjustment
-        console.error('Error adjusting textarea height:', error);
-      }
-    };
-
-    adjustHeight();
+    try {
+      textarea.style.height = 'auto';
+      textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+    } catch (error) {
+      // Gracefully handle any errors during height adjustment
+      console.error('Error adjusting textarea height:', error);
+    }
   }, [input]);
 
   // Send first AI message
