@@ -49,14 +49,27 @@ export async function GET() {
         `;
 
         // Get vocabulary learned during this session
-        const { rows: vocabRows } = await sql`
-          SELECT word, translation
-          FROM vocabulary
-          WHERE user_id = ${session.user.id}
-          AND first_seen_at >= ${conv.started_at}
-          ${conv.ended_at ? sql`AND first_seen_at <= ${conv.ended_at}` : sql``}
-          LIMIT 10
-        `;
+        let vocabRows: Array<{ word: string; translation: string }> = [];
+        if (conv.ended_at) {
+          const result = await sql`
+            SELECT word, translation
+            FROM vocabulary
+            WHERE user_id = ${session.user.id}
+            AND first_seen_at >= ${conv.started_at}
+            AND first_seen_at <= ${conv.ended_at}
+            LIMIT 10
+          `;
+          vocabRows = result.rows;
+        } else {
+          const result = await sql`
+            SELECT word, translation
+            FROM vocabulary
+            WHERE user_id = ${session.user.id}
+            AND first_seen_at >= ${conv.started_at}
+            LIMIT 10
+          `;
+          vocabRows = result.rows;
+        }
 
         // Generate a brief summary from the conversation
         const userMessages = messages.filter((m) => m.role === "user");
