@@ -47,7 +47,7 @@ export default function ChatInterface({
         textarea.style.height = 'auto';
         textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
       } catch (error) {
-        // Silently handle any errors during height adjustment
+        // Gracefully handle any errors during height adjustment
         console.error('Error adjusting textarea height:', error);
       }
     };
