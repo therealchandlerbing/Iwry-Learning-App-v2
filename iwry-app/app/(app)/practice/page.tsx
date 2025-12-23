@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import ChatInterface from "@/components/ChatInterface";
 import { DifficultyLevel, PortugueseAccent } from "@/types";
 import { SessionAnalysis } from "@/lib/gemini";
-import { Sparkles, Trophy, Lightbulb, X, BookOpen, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Sparkles, Lightbulb, X, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export default function PracticePage() {
   const router = useRouter();
@@ -21,6 +21,29 @@ export default function PracticePage() {
     // Load user preferences
     loadUserSettings();
   }, []);
+
+  // Save to learning log when summary is shown
+  useEffect(() => {
+    if (showSummary && analysis && conversationId) {
+      try {
+        const existingSessions = JSON.parse(localStorage.getItem("iwry_learning_sessions") || "[]");
+        const newSession = {
+          id: conversationId,
+          date: new Date().toISOString(),
+          level: difficulty,
+          summary: summary || analysis.performanceSummary || "Practice session completed",
+          vocabCount: analysis.vocabularyLearned?.length || 0,
+          feedback: analysis.performanceSummary,
+          vocabularyLearned: analysis.vocabularyLearned?.slice(0, 5),
+          nextStep: analysis.recommendedNextSteps?.[0] || "Continue practicing to improve your fluency!",
+        };
+        const updatedSessions = [newSession, ...existingSessions].slice(0, 30);
+        localStorage.setItem("iwry_learning_sessions", JSON.stringify(updatedSessions));
+      } catch (error) {
+        console.error("Failed to save to learning log:", error);
+      }
+    }
+  }, [showSummary, analysis, conversationId, difficulty, summary]);
 
   const loadUserSettings = async () => {
     try {
@@ -82,36 +105,8 @@ export default function PracticePage() {
     router.push("/dashboard");
   };
 
-  // Save session to learning log
-  const saveToLearningLog = () => {
-    if (analysis) {
-      try {
-        const existingSessions = JSON.parse(localStorage.getItem("iwry_learning_sessions") || "[]");
-        const newSession = {
-          id: conversationId || Date.now().toString(),
-          date: new Date().toISOString(),
-          level: difficulty,
-          summary: summary || analysis.performanceSummary || "Practice session completed",
-          vocabCount: analysis.vocabularyLearned?.length || 0,
-          feedback: analysis.performanceSummary,
-          vocabularyLearned: analysis.vocabularyLearned?.slice(0, 5),
-          nextStep: analysis.recommendedNextSteps?.[0] || "Continue practicing to improve your fluency!",
-        };
-        const updatedSessions = [newSession, ...existingSessions].slice(0, 30);
-        localStorage.setItem("iwry_learning_sessions", JSON.stringify(updatedSessions));
-      } catch (error) {
-        console.error("Failed to save to learning log:", error);
-      }
-    }
-  };
-
   // Summary Screen - Modal Style
   if (showSummary) {
-    // Save to learning log when summary is shown
-    if (analysis && conversationId) {
-      saveToLearningLog();
-    }
-
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
         <div className="w-full max-w-lg rounded-2xl border border-border bg-[#1e2433] overflow-hidden shadow-2xl">
@@ -119,6 +114,7 @@ export default function PracticePage() {
           <div className="bg-[#10b981] p-6 relative">
             <button
               onClick={finishSession}
+              aria-label="Close session summary"
               className="absolute top-4 right-4 h-8 w-8 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-colors"
             >
               <X className="h-5 w-5" />

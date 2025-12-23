@@ -147,11 +147,11 @@ export default function LessonsPage() {
           <div className="flex items-center justify-center gap-3 mb-2">
             <Flag className="h-8 w-8 text-[#10b981]" />
             <h1 className="text-3xl font-bold text-foreground">
-              Roteiro de Fluencia
+              Roteiro de Fluência
             </h1>
           </div>
           <p className="text-muted-foreground">
-            Siga o caminho estruturado dos niveis A1 ao B2.
+            Siga o caminho estruturado dos níveis A1 ao B2.
           </p>
         </div>
 
@@ -200,7 +200,7 @@ export default function LessonsPage() {
                 <div>
                   <h2 className="text-xl font-bold text-white">Lesson Studio</h2>
                   <p className="text-sm text-white/80">
-                    Crie aulas personalizadas sobre qualquer tema especifico com IA.
+                    Crie aulas personalizadas sobre qualquer tema específico com IA.
                   </p>
                 </div>
               </div>
@@ -281,6 +281,7 @@ export default function LessonsPage() {
               <div className={`${selectedLevel.bgColor} p-6 relative`}>
                 <button
                   onClick={() => setSelectedLevel(null)}
+                  aria-label="Close modal"
                   className="absolute top-4 right-4 h-8 w-8 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-colors"
                 >
                   <X className="h-5 w-5" />
@@ -340,6 +341,7 @@ export default function LessonsPage() {
               <div className="bg-gradient-to-r from-[#10b981] to-[#059669] p-6 relative">
                 <button
                   onClick={() => setGeneratedLesson(null)}
+                  aria-label="Close modal"
                   className="absolute top-4 right-4 h-8 w-8 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-colors"
                 >
                   <X className="h-5 w-5" />

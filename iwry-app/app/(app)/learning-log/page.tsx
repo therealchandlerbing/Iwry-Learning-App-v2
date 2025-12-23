@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FileText, ChevronRight, Calendar, BookOpen, X, Trophy, Lightbulb, Sparkles } from "lucide-react";
+import { FileText, ChevronRight, BookOpen, X, Trophy, Lightbulb, Sparkles } from "lucide-react";
 
 interface SessionEntry {
   id: string;
@@ -85,7 +85,7 @@ export default function LearningLogPage() {
             Learning Log
           </h1>
           <p className="text-muted-foreground">
-            Seu historico de evolucao arquivado.
+            Seu histórico de evolução arquivado.
           </p>
         </div>
 
@@ -172,7 +172,7 @@ export default function LearningLogPage() {
         {sessions.length > 0 && (
           <div className="text-center mt-8">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">
-              Armazenamos suas ultimas 30 sessoes localmente.
+              Armazenamos suas últimas 30 sessões localmente.
             </p>
           </div>
         )}
@@ -185,6 +185,7 @@ export default function LearningLogPage() {
               <div className="bg-[#10b981] p-6 relative">
                 <button
                   onClick={() => setSelectedSession(null)}
+                  aria-label="Close session details"
                   className="absolute top-4 right-4 h-8 w-8 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-colors"
                 >
                   <X className="h-5 w-5" />

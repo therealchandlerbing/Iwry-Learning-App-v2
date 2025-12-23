@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Home, MessageCircle, AlertCircle, User, LogOut, CreditCard, BookOpen, Search, FileText } from "lucide-react";
+import { Home, MessageCircle, User, LogOut, BookOpen, Search, FileText } from "lucide-react";
 
 export default function Navigation({ userName }: { userName?: string | null }) {
   const pathname = usePathname();

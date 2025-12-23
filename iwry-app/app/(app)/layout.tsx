@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import Navigation from "@/components/Navigation";
-import Sidebar, { CompactHeader } from "@/components/Sidebar";
+import Sidebar from "@/components/Sidebar";
 import { redirect } from "next/navigation";
 import { sql } from "@vercel/postgres";
 

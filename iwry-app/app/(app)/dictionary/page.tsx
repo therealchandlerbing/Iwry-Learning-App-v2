@@ -96,7 +96,7 @@ export default function DictionaryPage() {
           <div className="flex items-center justify-center gap-3 mb-2">
             <Languages className="h-8 w-8 text-[#10b981]" />
             <h1 className="text-3xl font-bold text-foreground">
-              Dicionario Ingles-Portugues
+              Dicionário Inglês-Português
             </h1>
           </div>
           <p className="text-muted-foreground">
@@ -154,12 +154,14 @@ export default function DictionaryPage() {
                     </h2>
                     <button
                       onClick={() => speakWord(entry.portugueseWord)}
+                      aria-label={`Pronounce ${entry.portugueseWord}`}
                       className="h-10 w-10 flex items-center justify-center rounded-full bg-[#10b981]/10 border border-[#10b981]/30 text-[#10b981] hover:bg-[#10b981]/20 transition-all"
                     >
                       <Volume2 className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => setIsFavorited(!isFavorited)}
+                      aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
                       className={`h-10 w-10 flex items-center justify-center rounded-full border transition-all ${
                         isFavorited
                           ? "bg-[#ec4899]/20 border-[#ec4899]/50 text-[#ec4899]"
@@ -227,7 +229,7 @@ export default function DictionaryPage() {
                     <div className="flex items-center gap-2 mb-4">
                       <Languages className="h-5 w-5 text-[#a855f7]" />
                       <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                        Conjugacao
+                        Conjugação
                       </h3>
                     </div>
                     <div className="space-y-3">
@@ -255,10 +257,10 @@ export default function DictionaryPage() {
                   <div className="h-full flex flex-col items-center justify-center text-center py-4">
                     <Languages className="h-10 w-10 text-muted-foreground mb-3 opacity-50" />
                     <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                      Sem Conjugacao
+                      Sem Conjugação
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Esta palavra nao e um verbo conjugavel.
+                      Esta palavra não é um verbo conjugável.
                     </p>
                   </div>
                 )}

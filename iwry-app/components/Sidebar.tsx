@@ -36,8 +36,6 @@ export default function Sidebar({
   streak = 0,
 }: SidebarProps) {
   const pathname = usePathname();
-  const [difficultyOpen, setDifficultyOpen] = useState(false);
-  const [selectedDifficulty, setSelectedDifficulty] = useState("BEGINNER");
 
   const isActive = (href: string) => pathname === href;
 
@@ -128,7 +126,7 @@ export default function Sidebar({
       <div className="p-4 border-t border-border bg-[#1e2433]/50">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            Nivel Atual
+            Nível Atual
           </span>
           <span className="flex items-center gap-1 text-sm font-semibold text-[#10b981]">
             <TrendingUp className="h-4 w-4" />
