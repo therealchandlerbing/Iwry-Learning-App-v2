@@ -1,5 +1,12 @@
-import { GoogleGenerativeAI, SchemaType, FunctionDeclaration } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { DifficultyLevel, PortugueseAccent, Correction } from "@/types";
+
+// Type definitions for function declarations (new SDK doesn't export these)
+interface FunctionDeclaration {
+  name: string;
+  description: string;
+  parameters: Record<string, any>;
+}
 
 // Support both env var names for smooth transition (v1 uses GEMINI_API_KEY, v2 originally used GOOGLE_GENERATIVE_AI_API_KEY)
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -7,7 +14,7 @@ if (!apiKey) {
   throw new Error("GEMINI_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY is not set. Get your key from: https://aistudio.google.com/apikey");
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
+const ai = new GoogleGenAI({ apiKey });
 
 // Accent-specific instructions
 const accentInstructions: Record<PortugueseAccent, string> = {
@@ -151,24 +158,23 @@ const correctionFunctionDeclaration: FunctionDeclaration = {
   name: "recordCorrection",
   description: "Record a grammatical or vocabulary mistake made by the user for later review",
   parameters: {
-    type: SchemaType.OBJECT,
+    type: "OBJECT",
     properties: {
       mistake: {
-        type: SchemaType.STRING,
+        type: "STRING",
         description: "The exact incorrect phrase or sentence the user said"
       },
       correction: {
-        type: SchemaType.STRING,
+        type: "STRING",
         description: "The correct version of what they should have said"
       },
       explanation: {
-        type: SchemaType.STRING,
+        type: "STRING",
         description: "Clear explanation in English of why the correction is needed and the grammar rule"
       },
       category: {
-        type: SchemaType.STRING,
+        type: "STRING",
         description: "Grammar category - aligned with v1 architecture",
-        format: "enum",
         enum: [
           "verb_tenses",
           "prepositions",
@@ -179,7 +185,7 @@ const correctionFunctionDeclaration: FunctionDeclaration = {
         ]
       },
       severity: {
-        type: SchemaType.NUMBER,
+        type: "NUMBER",
         description: "How important is this mistake? 1=minor, 3=moderate, 5=critical"
       }
     },
@@ -193,78 +199,74 @@ export interface GeminiChatOptions {
   conversationHistory?: Array<{ role: string; parts: Array<{ text: string }> }>;
 }
 
-// AI Models Configuration (Aligned with v1 Working Implementation)
+// AI Models Configuration (Production-Ready - Gemini 3 & 2.5 Models)
 const AI_MODELS = {
-  // Chat Conversations - Fast responses, great for dialogue (v1: gemini-2.5-flash)
-  CHAT: "gemini-2.0-flash-exp", // Using 2.0 as 2.5 may not be available yet
-  // Custom Lessons - Deep reasoning for curriculum design (v1: gemini-2.5-pro)
-  LESSONS: "gemini-1.5-pro-latest", // Using 1.5 as 2.5 may not be available yet
+  // Chat Conversations - Frontier intelligence with superior speed (Latest: December 2025)
+  CHAT: "gemini-3-flash-preview", // Gemini 3 Flash Preview - Fast responses, great for dialogue
+  // Custom Lessons - Deep reasoning for curriculum design (Latest: November 2025)
+  LESSONS: "gemini-3-pro-preview", // Gemini 3 Pro Preview - Best for deep reasoning and lesson generation
   // Dictionary Lookup - Instant, accurate translations
-  DICTIONARY: "gemini-2.0-flash-exp",
-  // Real-Time Voice - Optimized for live voice streaming
-  VOICE: "gemini-2.0-flash-exp",
-  // Text-to-Speech - Natural Brazilian Portuguese voice (v1: gemini-2.5-flash-preview-tts)
-  TTS: "gemini-2.0-flash-exp"
+  DICTIONARY: "gemini-3-flash-preview", // Gemini 3 Flash Preview - Instant lookups
+  // Real-Time Voice - Native audio model optimized for live voice streaming (Latest: September 2025)
+  VOICE: "gemini-2.5-flash-native-audio-preview-09-2025", // Gemini 2.5 Flash Live with native audio
+  // Text-to-Speech - Natural Brazilian Portuguese voice (Latest: December 2025)
+  TTS: "gemini-2.5-flash-preview-tts" // Gemini 2.5 Flash TTS for natural speech
 } as const;
 
 export async function sendMessage(
   userMessage: string,
   options: GeminiChatOptions
 ): Promise<{ response: string; corrections: Correction[] }> {
-  const model = genAI.getGenerativeModel({
-    model: AI_MODELS.CHAT, // Using optimized chat model from v1 architecture
-    systemInstruction: getSystemPrompt(options.difficulty, options.accent),
-    tools: [{
-      functionDeclarations: [correctionFunctionDeclaration]
-    }]
-  });
-
-  const chat = model.startChat({
-    history: options.conversationHistory || []
-  });
-
   try {
-    const result = await chat.sendMessage(userMessage);
-    const response = result.response;
-
-    if (!response) {
-      throw new Error("No response received from Gemini API");
-    }
+    const response = await ai.models.generateContent({
+      model: AI_MODELS.CHAT,
+      contents: [
+        ...(options.conversationHistory || []),
+        { role: 'user', parts: [{ text: userMessage }] }
+      ],
+      config: {
+        systemInstruction: getSystemPrompt(options.difficulty, options.accent),
+        tools: [{
+          functionDeclarations: [correctionFunctionDeclaration]
+        }]
+      }
+    });
 
     // Extract text response
     let textResponse = "";
     const corrections: Partial<Correction>[] = [];
 
     // Process all parts of the response
-    for (const part of response.candidates?.[0]?.content?.parts || []) {
-    if ('text' in part && part.text) {
-      textResponse += part.text;
-    }
+    const parts = response.candidates?.[0]?.content?.parts || [];
+    for (const part of parts) {
+      if ('text' in part && part.text) {
+        textResponse += part.text;
+      }
 
-    // Check for function calls (corrections)
-    if ('functionCall' in part && part.functionCall) {
-      const functionCall = part.functionCall;
-      if (functionCall.name === 'recordCorrection') {
-        const args = functionCall.args as Record<string, unknown> | undefined;
-        if (
-          args &&
-          typeof args.mistake === 'string' &&
-          typeof args.correction === 'string' &&
-          typeof args.explanation === 'string' &&
-          typeof args.category === 'string' &&
-          typeof args.severity === 'number'
-        ) {
-          corrections.push({
-            mistake: args.mistake,
-            correction: args.correction,
-            explanation: args.explanation,
-            grammarCategory: args.category,
-            confidenceScore: args.severity,
-          } as Correction);
+      // Check for function calls (corrections)
+      if ('functionCall' in part && part.functionCall) {
+        const functionCall = part.functionCall;
+        if (functionCall.name === 'recordCorrection') {
+          const args = functionCall.args as Record<string, unknown> | undefined;
+          if (
+            args &&
+            typeof args.mistake === 'string' &&
+            typeof args.correction === 'string' &&
+            typeof args.explanation === 'string' &&
+            typeof args.category === 'string' &&
+            typeof args.severity === 'number'
+          ) {
+            corrections.push({
+              mistake: args.mistake,
+              correction: args.correction,
+              explanation: args.explanation,
+              grammarCategory: args.category,
+              confidenceScore: args.severity,
+            } as Correction);
+          }
         }
       }
     }
-  }
 
     // Ensure we have a response
     if (!textResponse || textResponse.trim() === "") {
@@ -304,46 +306,6 @@ export interface DictionaryDefinition {
 
 // Function to get comprehensive dictionary definition with structured JSON output
 export async function getDictionaryDefinition(word: string): Promise<DictionaryDefinition> {
-  const model = genAI.getGenerativeModel({
-    model: AI_MODELS.DICTIONARY, // Using optimized dictionary model from v1 architecture
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: SchemaType.OBJECT,
-        properties: {
-          word: { type: SchemaType.STRING },
-          translation: { type: SchemaType.STRING },
-          partOfSpeech: { type: SchemaType.STRING },
-          pronunciation: { type: SchemaType.STRING },
-          conjugations: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
-          },
-          examples: {
-            type: SchemaType.ARRAY,
-            items: {
-              type: SchemaType.OBJECT,
-              properties: {
-                portuguese: { type: SchemaType.STRING },
-                english: { type: SchemaType.STRING }
-              },
-              required: ["portuguese", "english"]
-            }
-          },
-          synonyms: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
-          },
-          antonyms: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
-          }
-        },
-        required: ["word", "translation", "partOfSpeech", "examples"]
-      }
-    }
-  });
-
   const prompt = `Provide a comprehensive dictionary entry for this Portuguese word: "${word}"
 
 Include:
@@ -358,25 +320,65 @@ Include:
 
 Provide the response in the specified JSON format.`;
 
-  const result = await model.generateContent(prompt);
-  const response = result.response;
-  return JSON.parse(response.text());
+  const response = await ai.models.generateContent({
+    model: AI_MODELS.DICTIONARY,
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          word: { type: "STRING" },
+          translation: { type: "STRING" },
+          partOfSpeech: { type: "STRING" },
+          pronunciation: { type: "STRING" },
+          conjugations: {
+            type: "ARRAY",
+            items: { type: "STRING" }
+          },
+          examples: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                portuguese: { type: "STRING" },
+                english: { type: "STRING" }
+              },
+              required: ["portuguese", "english"]
+            }
+          },
+          synonyms: {
+            type: "ARRAY",
+            items: { type: "STRING" }
+          },
+          antonyms: {
+            type: "ARRAY",
+            items: { type: "STRING" }
+          }
+        },
+        required: ["word", "translation", "partOfSpeech", "examples"]
+      }
+    }
+  });
+
+  const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+  return JSON.parse(text);
 }
 
 // Function to translate a word/phrase from Portuguese to English (quick translation)
 export async function translateWord(word: string): Promise<string> {
-  const model = genAI.getGenerativeModel({
-    model: AI_MODELS.DICTIONARY // Using optimized dictionary model from v1 architecture
-  });
-
   const prompt = `Translate this Portuguese word or phrase to English. Provide ONLY the translation, nothing else.
 
 Portuguese: ${word}
 English:`;
 
-  const result = await model.generateContent(prompt);
-  const response = result.response;
-  return response.text().trim();
+  const response = await ai.models.generateContent({
+    model: AI_MODELS.DICTIONARY,
+    contents: [{ role: 'user', parts: [{ text: prompt }] }]
+  });
+
+  const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  return text.trim();
 }
 
 // Quiz Question Interface (v1 Architecture - Structured Output)
@@ -417,30 +419,6 @@ export async function generateQuiz(
   difficulty: DifficultyLevel,
   questionCount: number = 5
 ): Promise<QuizQuestion[]> {
-  const model = genAI.getGenerativeModel({
-    model: AI_MODELS.LESSONS, // Using Pro model for deeper reasoning
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: SchemaType.ARRAY,
-        items: {
-          type: SchemaType.OBJECT,
-          properties: {
-            question: { type: SchemaType.STRING },
-            options: {
-              type: SchemaType.ARRAY,
-              items: { type: SchemaType.STRING }
-            },
-            correctAnswer: { type: SchemaType.NUMBER },
-            explanation: { type: SchemaType.STRING },
-            difficulty: { type: SchemaType.STRING }
-          },
-          required: ["question", "options", "correctAnswer", "explanation", "difficulty"]
-        }
-      }
-    }
-  });
-
   const prompt = `Generate ${questionCount} multiple-choice quiz questions about "${topic}" in Portuguese at ${difficulty} level.
 
 Each question should:
@@ -452,8 +430,33 @@ Each question should:
 
 Provide the response as a JSON array.`;
 
-  const result = await model.generateContent(prompt);
-  return JSON.parse(result.response.text());
+  const response = await ai.models.generateContent({
+    model: AI_MODELS.LESSONS,
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "ARRAY",
+        items: {
+          type: "OBJECT",
+          properties: {
+            question: { type: "STRING" },
+            options: {
+              type: "ARRAY",
+              items: { type: "STRING" }
+            },
+            correctAnswer: { type: "NUMBER" },
+            explanation: { type: "STRING" },
+            difficulty: { type: "STRING" }
+          },
+          required: ["question", "options", "correctAnswer", "explanation", "difficulty"]
+        }
+      }
+    }
+  });
+
+  const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+  return JSON.parse(text);
 }
 
 // Generate custom lesson module with structured JSON output
@@ -462,65 +465,6 @@ export async function generateCustomLesson(
   difficulty: DifficultyLevel,
   userGoals?: string[]
 ): Promise<CustomLessonModule> {
-  const model = genAI.getGenerativeModel({
-    model: AI_MODELS.LESSONS, // Using Pro model for curriculum design
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: SchemaType.OBJECT,
-        properties: {
-          title: { type: SchemaType.STRING },
-          description: { type: SchemaType.STRING },
-          difficulty: { type: SchemaType.STRING },
-          estimatedMinutes: { type: SchemaType.NUMBER },
-          objectives: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
-          },
-          sections: {
-            type: SchemaType.ARRAY,
-            items: {
-              type: SchemaType.OBJECT,
-              properties: {
-                heading: { type: SchemaType.STRING },
-                content: { type: SchemaType.STRING },
-                examples: {
-                  type: SchemaType.ARRAY,
-                  items: {
-                    type: SchemaType.OBJECT,
-                    properties: {
-                      portuguese: { type: SchemaType.STRING },
-                      english: { type: SchemaType.STRING }
-                    },
-                    required: ["portuguese", "english"]
-                  }
-                }
-              },
-              required: ["heading", "content", "examples"]
-            }
-          },
-          practiceExercises: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
-          },
-          vocabulary: {
-            type: SchemaType.ARRAY,
-            items: {
-              type: SchemaType.OBJECT,
-              properties: {
-                word: { type: SchemaType.STRING },
-                translation: { type: SchemaType.STRING },
-                context: { type: SchemaType.STRING }
-              },
-              required: ["word", "translation", "context"]
-            }
-          }
-        },
-        required: ["title", "description", "difficulty", "estimatedMinutes", "objectives", "sections", "practiceExercises", "vocabulary"]
-      }
-    }
-  });
-
   const goalsText = userGoals ? `\nUser Goals: ${userGoals.join(", ")}` : "";
 
   const prompt = `Create a comprehensive Portuguese lesson module about "${topic}" at ${difficulty} level.${goalsText}
@@ -540,8 +484,68 @@ The lesson should be engaging, culturally relevant, and appropriate for ${diffic
 
 Provide the response in valid JSON format matching the CustomLessonModule structure.`;
 
-  const result = await model.generateContent(prompt);
-  return JSON.parse(result.response.text());
+  const response = await ai.models.generateContent({
+    model: AI_MODELS.LESSONS,
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          title: { type: "STRING" },
+          description: { type: "STRING" },
+          difficulty: { type: "STRING" },
+          estimatedMinutes: { type: "NUMBER" },
+          objectives: {
+            type: "ARRAY",
+            items: { type: "STRING" }
+          },
+          sections: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                heading: { type: "STRING" },
+                content: { type: "STRING" },
+                examples: {
+                  type: "ARRAY",
+                  items: {
+                    type: "OBJECT",
+                    properties: {
+                      portuguese: { type: "STRING" },
+                      english: { type: "STRING" }
+                    },
+                    required: ["portuguese", "english"]
+                  }
+                }
+              },
+              required: ["heading", "content", "examples"]
+            }
+          },
+          practiceExercises: {
+            type: "ARRAY",
+            items: { type: "STRING" }
+          },
+          vocabulary: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                word: { type: "STRING" },
+                translation: { type: "STRING" },
+                context: { type: "STRING" }
+              },
+              required: ["word", "translation", "context"]
+            }
+          }
+        },
+        required: ["title", "description", "difficulty", "estimatedMinutes", "objectives", "sections", "practiceExercises", "vocabulary"]
+      }
+    }
+  });
+
+  const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+  return JSON.parse(text);
 }
 
 // Session Analysis Interface (v1 Architecture - Structured Output)
@@ -566,55 +570,6 @@ export async function analyzeSession(
   messages: Array<{ role: string; content: string }>,
   corrections: Array<{ mistake: string; correction: string; explanation: string; grammarCategory: string }>
 ): Promise<SessionAnalysis> {
-  const model = genAI.getGenerativeModel({
-    model: AI_MODELS.CHAT,
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: SchemaType.OBJECT,
-        properties: {
-          duration: { type: SchemaType.NUMBER },
-          topicsDiscussed: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
-          },
-          vocabularyLearned: {
-            type: SchemaType.ARRAY,
-            items: {
-              type: SchemaType.OBJECT,
-              properties: {
-                word: { type: SchemaType.STRING },
-                translation: { type: SchemaType.STRING },
-                context: { type: SchemaType.STRING }
-              },
-              required: ["word", "translation", "context"]
-            }
-          },
-          grammarPoints: {
-            type: SchemaType.ARRAY,
-            items: {
-              type: SchemaType.OBJECT,
-              properties: {
-                category: { type: SchemaType.STRING },
-                examples: {
-                  type: SchemaType.ARRAY,
-                  items: { type: SchemaType.STRING }
-                }
-              },
-              required: ["category", "examples"]
-            }
-          },
-          performanceSummary: { type: SchemaType.STRING },
-          recommendedNextSteps: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
-          }
-        },
-        required: ["duration", "topicsDiscussed", "vocabularyLearned", "grammarPoints", "performanceSummary", "recommendedNextSteps"]
-      }
-    }
-  });
-
   const conversationText = messages.map(m => `${m.role}: ${m.content}`).join('\n');
   const correctionsText = corrections.map(c =>
     `${c.mistake} → ${c.correction} [${c.grammarCategory}]`
@@ -636,8 +591,58 @@ Provide a JSON response with:
 5. performanceSummary: encouraging 2-3 sentence overview
 6. recommendedNextSteps: 3-4 specific suggestions for continued learning`;
 
-  const result = await model.generateContent(prompt);
-  return JSON.parse(result.response.text());
+  const response = await ai.models.generateContent({
+    model: AI_MODELS.CHAT,
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: "OBJECT",
+        properties: {
+          duration: { type: "NUMBER" },
+          topicsDiscussed: {
+            type: "ARRAY",
+            items: { type: "STRING" }
+          },
+          vocabularyLearned: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                word: { type: "STRING" },
+                translation: { type: "STRING" },
+                context: { type: "STRING" }
+              },
+              required: ["word", "translation", "context"]
+            }
+          },
+          grammarPoints: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                category: { type: "STRING" },
+                examples: {
+                  type: "ARRAY",
+                  items: { type: "STRING" }
+                }
+              },
+              required: ["category", "examples"]
+            }
+          },
+          performanceSummary: { type: "STRING" },
+          recommendedNextSteps: {
+            type: "ARRAY",
+            items: { type: "STRING" }
+          }
+        },
+        required: ["duration", "topicsDiscussed", "vocabularyLearned", "grammarPoints", "performanceSummary", "recommendedNextSteps"]
+      }
+    }
+  });
+
+  const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+  return JSON.parse(text);
 }
 
 // Generate conversation summary
@@ -645,10 +650,6 @@ export async function generateConversationSummary(
   messages: Array<{ role: string; content: string }>,
   corrections: Array<{ mistake: string; correction: string; explanation: string }>
 ): Promise<string> {
-  const model = genAI.getGenerativeModel({
-    model: AI_MODELS.CHAT // Using chat model for summaries
-  });
-
   const conversationText = messages
     .map(m => `${m.role}: ${m.content}`)
     .join('\n');
@@ -673,6 +674,11 @@ Provide:
 
 Keep it concise, warm, and encouraging. 3-4 sentences total.`;
 
-  const result = await model.generateContent(prompt);
-  return result.response.text();
+  const response = await ai.models.generateContent({
+    model: AI_MODELS.CHAT,
+    contents: [{ role: 'user', parts: [{ text: prompt }] }]
+  });
+
+  const text = response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  return text;
 }
