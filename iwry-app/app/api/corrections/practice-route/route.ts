@@ -35,30 +35,43 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { correctionId, practiceType, wasCorrect } = body;
 
-    // Update correction practice stats
-    const result = await sql`
-      UPDATE corrections
-      SET
-        times_practiced = times_practiced + 1,
-        last_practiced_at = NOW(),
-        next_review_date = ${calculateNextReviewDate(
-          0,
-          wasCorrect || false
-        ).toISOString()},
-        mastery_status = CASE
-          WHEN times_practiced >= 2 AND ${wasCorrect} THEN 'mastered'
-          ELSE 'learning'
-        END
+    // First, fetch the current correction to get times_practiced
+    const currentResult = await sql`
+      SELECT times_practiced
+      FROM corrections
       WHERE id = ${correctionId} AND user_id = ${session.user.id}
-      RETURNING *
     `;
 
-    if (result.rows.length === 0) {
+    if (currentResult.rows.length === 0) {
       return NextResponse.json(
         { error: "Correction not found" },
         { status: 404 }
       );
     }
+
+    const currentTimesPracticed = currentResult.rows[0].times_practiced || 0;
+    const newTimesPracticed = currentTimesPracticed + 1;
+
+    // Calculate next review date with correct timesPracticed value
+    const nextReviewDate = calculateNextReviewDate(
+      newTimesPracticed,
+      wasCorrect || false
+    );
+
+    // Update correction practice stats
+    const result = await sql`
+      UPDATE corrections
+      SET
+        times_practiced = ${newTimesPracticed},
+        last_practiced_at = NOW(),
+        next_review_date = ${nextReviewDate.toISOString()},
+        mastery_status = CASE
+          WHEN ${newTimesPracticed} >= 3 AND ${wasCorrect} THEN 'mastered'
+          ELSE 'learning'
+        END
+      WHERE id = ${correctionId} AND user_id = ${session.user.id}
+      RETURNING *
+    `;
 
     return NextResponse.json({
       success: true,

@@ -129,19 +129,17 @@ export default function ChatInterface({
     }
   };
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!input.trim() || isLoading) return;
+  // Unified message sending function (used by both text and voice input)
+  const sendMessageInternal = async (messageContent: string) => {
+    if (!messageContent.trim() || isLoading) return;
 
     const userMessage: ChatMessage = {
       role: "user",
-      content: input.trim(),
+      content: messageContent.trim(),
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
     setIsLoading(true);
 
     try {
@@ -150,7 +148,7 @@ export default function ChatInterface({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conversationId,
-          message: input.trim(),
+          message: messageContent.trim(),
           difficulty,
           accent,
           history: messages,
@@ -173,7 +171,6 @@ export default function ChatInterface({
       }
     } catch (error) {
       console.error("Failed to send message:", error);
-      // Add error message
       setMessages((prev) => [
         ...prev,
         {
@@ -184,63 +181,19 @@ export default function ChatInterface({
       ]);
     } finally {
       setIsLoading(false);
-      inputRef.current?.focus();
     }
   };
 
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendMessageInternal(input);
+    setInput("");
+    inputRef.current?.focus();
+  };
+
   const handleVoiceMessage = async (message: string) => {
-    if (!message.trim() || isLoading) return;
-
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: message.trim(),
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
     resetTranscript();
-
-    try {
-      const response = await fetch("/api/chat/message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          conversationId,
-          message: message.trim(),
-          difficulty,
-          accent,
-          history: messages,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        const aiMessage: ChatMessage = {
-          role: "assistant",
-          content: data.response,
-          timestamp: new Date(),
-          corrections: data.corrections || [],
-        };
-
-        setMessages((prev) => [...prev, aiMessage]);
-      } else {
-        throw new Error(data.error || "Failed to send message");
-      }
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Desculpe, there was an error. Please try again.",
-          timestamp: new Date(),
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+    await sendMessageInternal(message);
   };
 
   const handleVoiceToggle = () => {

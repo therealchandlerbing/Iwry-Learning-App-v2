@@ -12,13 +12,36 @@ interface UseTextToSpeechReturn {
 export function useTextToSpeech(): UseTextToSpeechReturn {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       synthRef.current = window.speechSynthesis;
       setIsSupported(true);
+
+      // Load voices
+      const loadVoices = () => {
+        const availableVoices = synthRef.current?.getVoices() || [];
+        voicesRef.current = availableVoices;
+        setVoicesLoaded(true);
+      };
+
+      // Voices may load asynchronously
+      loadVoices();
+
+      // Listen for voices changed event (important for Chrome)
+      if (synthRef.current) {
+        synthRef.current.onvoiceschanged = loadVoices;
+      }
+
+      return () => {
+        if (synthRef.current) {
+          synthRef.current.onvoiceschanged = null;
+        }
+      };
     }
   }, []);
 
@@ -37,8 +60,7 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
     utterance.pitch = 1.0;
 
     // Get Brazilian Portuguese voice if available
-    const voices = synthRef.current.getVoices();
-    const portugueseVoice = voices.find(
+    const portugueseVoice = voicesRef.current.find(
       (voice) =>
         voice.lang === "pt-BR" ||
         voice.lang.startsWith("pt-") ||
@@ -55,7 +77,7 @@ export function useTextToSpeech(): UseTextToSpeechReturn {
 
     utteranceRef.current = utterance;
     synthRef.current.speak(utterance);
-  }, [isSupported]);
+  }, [isSupported, voicesLoaded]);
 
   const stop = useCallback(() => {
     if (synthRef.current) {

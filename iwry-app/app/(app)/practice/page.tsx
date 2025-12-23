@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ChatInterface from "@/components/ChatInterface";
 import { DifficultyLevel, PortugueseAccent } from "@/types";
+import { SessionAnalysis } from "@/lib/gemini";
 import { Sparkles, Trophy, Lightbulb } from "lucide-react";
 
 export default function PracticePage() {
@@ -14,7 +15,7 @@ export default function PracticePage() {
   const [accent, setAccent] = useState<PortugueseAccent>("sao-paulo");
   const [showSummary, setShowSummary] = useState(false);
   const [summary, setSummary] = useState("");
-  const [analysis, setAnalysis] = useState<any>(null);
+  const [analysis, setAnalysis] = useState<SessionAnalysis | null>(null);
 
   useEffect(() => {
     // Load user preferences

@@ -23,7 +23,11 @@ export async function POST(request: NextRequest) {
 
     // Get corrections from this conversation
     const correctionsResult = await sql`
-      SELECT mistake, correction, explanation, grammar_category
+      SELECT
+        mistake,
+        correction,
+        explanation,
+        grammar_category AS "grammarCategory"
       FROM corrections
       WHERE conversation_id = ${conversationId}
     `;

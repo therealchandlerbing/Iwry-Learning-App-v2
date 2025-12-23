@@ -1,8 +1,28 @@
 import { sql } from "@vercel/postgres";
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
+    // Require authentication
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Optional: Check for specific migration secret key for extra security
+    const migrationSecret = request.headers.get("x-migration-secret");
+    const expectedSecret = process.env.MIGRATION_SECRET;
+
+    if (expectedSecret && migrationSecret !== expectedSecret) {
+      return NextResponse.json(
+        { error: "Invalid migration secret" },
+        { status: 403 }
+      );
+    }
+
     // Add spaced repetition fields to corrections table
     await sql`
       ALTER TABLE corrections
