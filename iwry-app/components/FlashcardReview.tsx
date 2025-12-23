@@ -34,10 +34,10 @@ export default function FlashcardReview({ corrections }: FlashcardReviewProps) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
-  const [reviewedCards, setReviewedCards] = useState<Set<number>>(new Set());
   const [correctCount, setCorrectCount] = useState(0);
   const [incorrectCount, setIncorrectCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!corrections || corrections.length === 0) {
     return (
@@ -81,8 +81,10 @@ export default function FlashcardReview({ corrections }: FlashcardReviewProps) {
 
   const handleRating = async (wasCorrect: boolean) => {
     try {
+      setError(null);
+
       // Update the correction's practice status
-      await fetch("/api/corrections/practice", {
+      const response = await fetch("/api/corrections/practice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -91,8 +93,9 @@ export default function FlashcardReview({ corrections }: FlashcardReviewProps) {
         }),
       });
 
-      // Track this card as reviewed
-      setReviewedCards(new Set(reviewedCards).add(currentIndex));
+      if (!response.ok) {
+        throw new Error("Failed to save progress");
+      }
 
       if (wasCorrect) {
         setCorrectCount(correctCount + 1);
@@ -109,17 +112,17 @@ export default function FlashcardReview({ corrections }: FlashcardReviewProps) {
       }
     } catch (error) {
       console.error("Failed to record practice:", error);
-      alert("Failed to save your progress. Please try again.");
+      setError("Failed to save your progress. Your answer was not recorded.");
     }
   };
 
   const handleRestart = () => {
     setCurrentIndex(0);
     setIsFlipped(false);
-    setReviewedCards(new Set());
     setCorrectCount(0);
     setIncorrectCount(0);
     setIsComplete(false);
+    setError(null);
   };
 
   const categoryColors: Record<string, string> = {
@@ -345,6 +348,19 @@ export default function FlashcardReview({ corrections }: FlashcardReviewProps) {
           <p className="text-sm text-muted-foreground">
             Try to recall the correct form before flipping
           </p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="mt-4 rounded-lg border border-[#ef4444]/30 bg-[#ef4444]/10 p-4 text-center">
+          <p className="text-sm text-[#ef4444] font-medium">{error}</p>
+          <button
+            onClick={() => setError(null)}
+            className="mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 

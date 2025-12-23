@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatDate } from "@/lib/utils";
-import { Search, BookOpen, Filter, X } from "lucide-react";
+import { Search, BookOpen, X } from "lucide-react";
 import StatCard from "@/components/StatCard";
 
 interface VocabularyWord {
@@ -33,12 +33,23 @@ export default function VocabularyClient({ vocabulary }: VocabularyClientProps) 
     return matchesSearch && matchesDifficulty;
   });
 
-  const difficultyCount = {
-    beginner: vocabulary.filter((w) => w.difficulty_level === "beginner").length,
-    intermediate: vocabulary.filter((w) => w.difficulty_level === "intermediate")
-      .length,
-    advanced: vocabulary.filter((w) => w.difficulty_level === "advanced").length,
-  };
+  const difficultyCount = vocabulary.reduce(
+    (acc, word) => {
+      switch (word.difficulty_level) {
+        case "beginner":
+          acc.beginner++;
+          break;
+        case "intermediate":
+          acc.intermediate++;
+          break;
+        case "advanced":
+          acc.advanced++;
+          break;
+      }
+      return acc;
+    },
+    { beginner: 0, intermediate: 0, advanced: 0 }
+  );
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
