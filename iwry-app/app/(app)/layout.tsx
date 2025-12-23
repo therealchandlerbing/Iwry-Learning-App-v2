@@ -30,7 +30,9 @@ export default async function AppLayout({
   }
 
   const stats = await getUserStats(session.user.id || "");
-  const progress = Math.min(Math.round((parseInt(stats.conversation_count) * 10 + parseInt(stats.vocab_count) * 2) / 100 * 100), 100);
+  const conversationScore = parseInt(stats.conversation_count || "0") * 10;
+  const vocabScore = parseInt(stats.vocab_count || "0") * 2;
+  const progress = Math.min(100, Math.round((conversationScore + vocabScore) / 10));
   const levelMap: Record<string, string> = {
     beginner: "A1+",
     intermediate: "B1",

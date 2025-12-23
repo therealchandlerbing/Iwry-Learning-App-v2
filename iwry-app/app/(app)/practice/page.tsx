@@ -7,6 +7,8 @@ import { DifficultyLevel, PortugueseAccent } from "@/types";
 import { SessionAnalysis } from "@/lib/gemini";
 import { Sparkles, Lightbulb, X, ArrowRight, CheckCircle2 } from "lucide-react";
 
+const MAX_SESSIONS = 30;
+
 export default function PracticePage() {
   const router = useRouter();
   const [isStarted, setIsStarted] = useState(false);
@@ -37,7 +39,7 @@ export default function PracticePage() {
           vocabularyLearned: analysis.vocabularyLearned?.slice(0, 5),
           nextStep: analysis.recommendedNextSteps?.[0] || "Continue practicing to improve your fluency!",
         };
-        const updatedSessions = [newSession, ...existingSessions].slice(0, 30);
+        const updatedSessions = [newSession, ...existingSessions].slice(0, MAX_SESSIONS);
         localStorage.setItem("iwry_learning_sessions", JSON.stringify(updatedSessions));
       } catch (error) {
         console.error("Failed to save to learning log:", error);

@@ -22,11 +22,20 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { LucideIcon } from "lucide-react";
+
 interface SidebarProps {
   userName?: string | null;
   userLevel?: string;
   progress?: number;
   streak?: number;
+}
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  badge?: string | null;
 }
 
 export default function Sidebar({
@@ -37,19 +46,22 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) => {
+    const [path] = href.split("?");
+    return pathname === path || pathname === href;
+  };
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: "/" });
   };
 
-  const learningModes = [
-    { href: "/practice", label: "Conversation", icon: MessageCircle },
-    { href: "/practice", label: "Texting (WhatsApp)", icon: Smartphone, badge: null },
-    { href: "/practice", label: "Live Voice Practice", icon: Mic, badge: "LIVE" },
+  const learningModes: NavItem[] = [
+    { href: "/practice?mode=conversation", label: "Conversation", icon: MessageCircle },
+    { href: "/practice?mode=texting", label: "Texting (WhatsApp)", icon: Smartphone, badge: null },
+    { href: "/practice?mode=voice", label: "Live Voice Practice", icon: Mic, badge: "LIVE" },
   ];
 
-  const toolsAnalysis = [
+  const toolsAnalysis: NavItem[] = [
     { href: "/dictionary", label: "Linguistic Lookup", icon: Search },
     { href: "/photo-analysis", label: "Photo Analysis", icon: Camera },
     { href: "/lessons", label: "Structured Lessons", icon: BookOpen },
@@ -58,7 +70,7 @@ export default function Sidebar({
     { href: "/learning-log", label: "Learning Log", icon: FileText },
   ];
 
-  const support = [
+  const support: NavItem[] = [
     { href: "/help", label: "Quick Help", icon: HelpCircle },
     { href: "/profile", label: "My Progress", icon: BarChart3 },
   ];
@@ -68,7 +80,7 @@ export default function Sidebar({
     items,
   }: {
     title: string;
-    items: Array<{ href: string; label: string; icon: any; badge?: string | null }>;
+    items: NavItem[];
   }) => (
     <div className="mb-6">
       <h3 className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">

@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { FileText, ChevronRight, BookOpen, X, Trophy, Lightbulb, Sparkles } from "lucide-react";
 
+const MAX_SESSIONS = 30;
+
 interface SessionEntry {
   id: string;
   date: string;
@@ -42,7 +44,7 @@ export default function LearningLogPage() {
         const data = await response.json();
         if (data.sessions && data.sessions.length > 0) {
           // Merge with local storage, keeping last 30
-          const merged = [...data.sessions].slice(0, 30);
+          const merged = [...data.sessions].slice(0, MAX_SESSIONS);
           setSessions(merged);
           localStorage.setItem("iwry_learning_sessions", JSON.stringify(merged));
         }
