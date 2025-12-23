@@ -1,6 +1,12 @@
-import { GoogleGenAI, SchemaType } from "@google/genai";
-import type { FunctionDeclaration } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { DifficultyLevel, PortugueseAccent, Correction } from "@/types";
+
+// Type definitions for function declarations (new SDK doesn't export these)
+interface FunctionDeclaration {
+  name: string;
+  description: string;
+  parameters: Record<string, any>;
+}
 
 // Support both env var names for smooth transition (v1 uses GEMINI_API_KEY, v2 originally used GOOGLE_GENERATIVE_AI_API_KEY)
 const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -152,22 +158,22 @@ const correctionFunctionDeclaration: FunctionDeclaration = {
   name: "recordCorrection",
   description: "Record a grammatical or vocabulary mistake made by the user for later review",
   parameters: {
-    type: SchemaType.OBJECT,
+    type: "OBJECT",
     properties: {
       mistake: {
-        type: SchemaType.STRING,
+        type: "STRING",
         description: "The exact incorrect phrase or sentence the user said"
       },
       correction: {
-        type: SchemaType.STRING,
+        type: "STRING",
         description: "The correct version of what they should have said"
       },
       explanation: {
-        type: SchemaType.STRING,
+        type: "STRING",
         description: "Clear explanation in English of why the correction is needed and the grammar rule"
       },
       category: {
-        type: SchemaType.STRING,
+        type: "STRING",
         description: "Grammar category - aligned with v1 architecture",
         enum: [
           "verb_tenses",
@@ -179,7 +185,7 @@ const correctionFunctionDeclaration: FunctionDeclaration = {
         ]
       },
       severity: {
-        type: SchemaType.NUMBER,
+        type: "NUMBER",
         description: "How important is this mistake? 1=minor, 3=moderate, 5=critical"
       }
     },
@@ -320,34 +326,34 @@ Provide the response in the specified JSON format.`;
     config: {
       responseMimeType: "application/json",
       responseSchema: {
-        type: SchemaType.OBJECT,
+        type: "OBJECT",
         properties: {
-          word: { type: SchemaType.STRING },
-          translation: { type: SchemaType.STRING },
-          partOfSpeech: { type: SchemaType.STRING },
-          pronunciation: { type: SchemaType.STRING },
+          word: { type: "STRING" },
+          translation: { type: "STRING" },
+          partOfSpeech: { type: "STRING" },
+          pronunciation: { type: "STRING" },
           conjugations: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
+            type: "ARRAY",
+            items: { type: "STRING" }
           },
           examples: {
-            type: SchemaType.ARRAY,
+            type: "ARRAY",
             items: {
-              type: SchemaType.OBJECT,
+              type: "OBJECT",
               properties: {
-                portuguese: { type: SchemaType.STRING },
-                english: { type: SchemaType.STRING }
+                portuguese: { type: "STRING" },
+                english: { type: "STRING" }
               },
               required: ["portuguese", "english"]
             }
           },
           synonyms: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
+            type: "ARRAY",
+            items: { type: "STRING" }
           },
           antonyms: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
+            type: "ARRAY",
+            items: { type: "STRING" }
           }
         },
         required: ["word", "translation", "partOfSpeech", "examples"]
@@ -430,18 +436,18 @@ Provide the response as a JSON array.`;
     config: {
       responseMimeType: "application/json",
       responseSchema: {
-        type: SchemaType.ARRAY,
+        type: "ARRAY",
         items: {
-          type: SchemaType.OBJECT,
+          type: "OBJECT",
           properties: {
-            question: { type: SchemaType.STRING },
+            question: { type: "STRING" },
             options: {
-              type: SchemaType.ARRAY,
-              items: { type: SchemaType.STRING }
+              type: "ARRAY",
+              items: { type: "STRING" }
             },
-            correctAnswer: { type: SchemaType.NUMBER },
-            explanation: { type: SchemaType.STRING },
-            difficulty: { type: SchemaType.STRING }
+            correctAnswer: { type: "NUMBER" },
+            explanation: { type: "STRING" },
+            difficulty: { type: "STRING" }
           },
           required: ["question", "options", "correctAnswer", "explanation", "difficulty"]
         }
@@ -484,30 +490,30 @@ Provide the response in valid JSON format matching the CustomLessonModule struct
     config: {
       responseMimeType: "application/json",
       responseSchema: {
-        type: SchemaType.OBJECT,
+        type: "OBJECT",
         properties: {
-          title: { type: SchemaType.STRING },
-          description: { type: SchemaType.STRING },
-          difficulty: { type: SchemaType.STRING },
-          estimatedMinutes: { type: SchemaType.NUMBER },
+          title: { type: "STRING" },
+          description: { type: "STRING" },
+          difficulty: { type: "STRING" },
+          estimatedMinutes: { type: "NUMBER" },
           objectives: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
+            type: "ARRAY",
+            items: { type: "STRING" }
           },
           sections: {
-            type: SchemaType.ARRAY,
+            type: "ARRAY",
             items: {
-              type: SchemaType.OBJECT,
+              type: "OBJECT",
               properties: {
-                heading: { type: SchemaType.STRING },
-                content: { type: SchemaType.STRING },
+                heading: { type: "STRING" },
+                content: { type: "STRING" },
                 examples: {
-                  type: SchemaType.ARRAY,
+                  type: "ARRAY",
                   items: {
-                    type: SchemaType.OBJECT,
+                    type: "OBJECT",
                     properties: {
-                      portuguese: { type: SchemaType.STRING },
-                      english: { type: SchemaType.STRING }
+                      portuguese: { type: "STRING" },
+                      english: { type: "STRING" }
                     },
                     required: ["portuguese", "english"]
                   }
@@ -517,17 +523,17 @@ Provide the response in valid JSON format matching the CustomLessonModule struct
             }
           },
           practiceExercises: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
+            type: "ARRAY",
+            items: { type: "STRING" }
           },
           vocabulary: {
-            type: SchemaType.ARRAY,
+            type: "ARRAY",
             items: {
-              type: SchemaType.OBJECT,
+              type: "OBJECT",
               properties: {
-                word: { type: SchemaType.STRING },
-                translation: { type: SchemaType.STRING },
-                context: { type: SchemaType.STRING }
+                word: { type: "STRING" },
+                translation: { type: "STRING" },
+                context: { type: "STRING" }
               },
               required: ["word", "translation", "context"]
             }
@@ -591,43 +597,43 @@ Provide a JSON response with:
     config: {
       responseMimeType: "application/json",
       responseSchema: {
-        type: SchemaType.OBJECT,
+        type: "OBJECT",
         properties: {
-          duration: { type: SchemaType.NUMBER },
+          duration: { type: "NUMBER" },
           topicsDiscussed: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
+            type: "ARRAY",
+            items: { type: "STRING" }
           },
           vocabularyLearned: {
-            type: SchemaType.ARRAY,
+            type: "ARRAY",
             items: {
-              type: SchemaType.OBJECT,
+              type: "OBJECT",
               properties: {
-                word: { type: SchemaType.STRING },
-                translation: { type: SchemaType.STRING },
-                context: { type: SchemaType.STRING }
+                word: { type: "STRING" },
+                translation: { type: "STRING" },
+                context: { type: "STRING" }
               },
               required: ["word", "translation", "context"]
             }
           },
           grammarPoints: {
-            type: SchemaType.ARRAY,
+            type: "ARRAY",
             items: {
-              type: SchemaType.OBJECT,
+              type: "OBJECT",
               properties: {
-                category: { type: SchemaType.STRING },
+                category: { type: "STRING" },
                 examples: {
-                  type: SchemaType.ARRAY,
-                  items: { type: SchemaType.STRING }
+                  type: "ARRAY",
+                  items: { type: "STRING" }
                 }
               },
               required: ["category", "examples"]
             }
           },
-          performanceSummary: { type: SchemaType.STRING },
+          performanceSummary: { type: "STRING" },
           recommendedNextSteps: {
-            type: SchemaType.ARRAY,
-            items: { type: SchemaType.STRING }
+            type: "ARRAY",
+            items: { type: "STRING" }
           }
         },
         required: ["duration", "topicsDiscussed", "vocabularyLearned", "grammarPoints", "performanceSummary", "recommendedNextSteps"]
