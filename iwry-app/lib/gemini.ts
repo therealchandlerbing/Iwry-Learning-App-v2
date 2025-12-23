@@ -196,15 +196,15 @@ export interface GeminiChatOptions {
 // AI Models Configuration (Aligned with v1 Working Implementation)
 const AI_MODELS = {
   // Chat Conversations - Fast responses, great for dialogue (v1: gemini-2.5-flash)
-  CHAT: "gemini-2.0-flash-exp", // Using 2.0 as 2.5 may not be available yet
+  CHAT: "gemini-1.5-flash", // Using stable 1.5-flash model for reliable performance
   // Custom Lessons - Deep reasoning for curriculum design (v1: gemini-2.5-pro)
-  LESSONS: "gemini-1.5-pro-latest", // Using 1.5 as 2.5 may not be available yet
+  LESSONS: "gemini-1.5-pro-latest", // Using 1.5 pro for deeper reasoning
   // Dictionary Lookup - Instant, accurate translations
-  DICTIONARY: "gemini-2.0-flash-exp",
+  DICTIONARY: "gemini-1.5-flash",
   // Real-Time Voice - Optimized for live voice streaming
-  VOICE: "gemini-2.0-flash-exp",
+  VOICE: "gemini-1.5-flash",
   // Text-to-Speech - Natural Brazilian Portuguese voice (v1: gemini-2.5-flash-preview-tts)
-  TTS: "gemini-2.0-flash-exp"
+  TTS: "gemini-1.5-flash"
 } as const;
 
 export async function sendMessage(

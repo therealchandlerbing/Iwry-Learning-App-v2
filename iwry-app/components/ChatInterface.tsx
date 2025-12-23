@@ -34,6 +34,27 @@ export default function ChatInterface({
     scrollToBottom();
   }, [messages]);
 
+  // Auto-resize textarea (client-side only)
+  useEffect(() => {
+    // Ensure we're on the client side and the element exists
+    if (typeof window === 'undefined') return;
+
+    const textarea = inputRef.current;
+    if (!textarea || !(textarea instanceof HTMLTextAreaElement)) return;
+
+    const adjustHeight = () => {
+      try {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+      } catch (error) {
+        // Silently handle any errors during height adjustment
+        console.error('Error adjusting textarea height:', error);
+      }
+    };
+
+    adjustHeight();
+  }, [input]);
+
   // Send first AI message
   useEffect(() => {
     if (messages.length === 0) {
