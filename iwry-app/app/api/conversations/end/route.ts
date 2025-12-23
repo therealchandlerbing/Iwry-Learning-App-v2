@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { sql } from "@vercel/postgres";
-import { generateConversationSummary } from "@/lib/gemini";
+import { analyzeSession } from "@/lib/gemini";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Get corrections from this conversation
     const correctionsResult = await sql`
-      SELECT mistake, correction, explanation
+      SELECT mistake, correction, explanation, grammar_category
       FROM corrections
       WHERE conversation_id = ${conversationId}
     `;
@@ -35,20 +35,51 @@ export async function POST(request: NextRequest) {
       WHERE id = ${conversationId}
     `;
 
-    // Generate summary using Gemini
-    let summary = "";
+    // Generate enhanced summary using Gemini with structured analysis
+    let analysis: any = null;
     try {
-      summary = await generateConversationSummary(
+      analysis = await analyzeSession(
         messagesResult.rows as Array<{ role: string; content: string }>,
-        correctionsResult.rows as Array<{ mistake: string; correction: string; explanation: string }>
+        correctionsResult.rows as Array<{
+          mistake: string;
+          correction: string;
+          explanation: string;
+          grammarCategory: string;
+        }>
       );
+
+      // Save vocabulary learned to the database
+      if (analysis.vocabularyLearned && analysis.vocabularyLearned.length > 0) {
+        for (const vocab of analysis.vocabularyLearned) {
+          await sql`
+            INSERT INTO vocabulary (user_id, word, translation, context)
+            VALUES (${session.user.id}, ${vocab.word}, ${vocab.translation}, ${vocab.context})
+            ON CONFLICT (user_id, word)
+            DO UPDATE SET
+              times_encountered = vocabulary.times_encountered + 1,
+              last_seen_at = NOW()
+          `;
+        }
+      }
     } catch (error) {
-      console.error("Failed to generate summary:", error);
-      summary = "Great session! Keep practicing to improve your Portuguese.";
+      console.error("Failed to generate analysis:", error);
+      analysis = {
+        duration: messagesResult.rows.length * 0.5, // Estimate 30 seconds per message
+        topicsDiscussed: ["General conversation"],
+        vocabularyLearned: [],
+        grammarPoints: [],
+        performanceSummary: "Great session! Keep practicing to improve your Portuguese.",
+        recommendedNextSteps: [
+          "Continue practicing regularly",
+          "Review the corrections from this session",
+          "Try using new vocabulary in your next conversation",
+        ],
+      };
     }
 
     return NextResponse.json({
-      summary,
+      summary: analysis.performanceSummary,
+      analysis,
       messageCount: messagesResult.rows.length,
       correctionsCount: correctionsResult.rows.length,
     });
